@@ -49,6 +49,11 @@ public class BattleManager : NetworkBehaviour
 
     public void SpawnCharacters(List<CardData> playerCards, List<CardData> enemyCards)
     {
+        if (!IsServer)
+        {
+            Debug.LogWarning("SpawnCharacters sadece sunucu tarafından çağrılabilir.");
+            return;
+        }
         for (int i = 0; i < playerCards.Count && i < playerGridPositions.Length; i++)
         {
             GameObject obj = Instantiate(characterPrefab, playerGridPositions[i].position, Quaternion.identity);
@@ -228,7 +233,4 @@ public class BattleManager : NetworkBehaviour
         obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(senderClientId);
         allCharacters.Add(ch);
     }
-
-   
-
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
@@ -53,16 +53,37 @@ public class QRDataManager : MonoBehaviour
         abilityText.text = "Ability: " + ability;
         passiveText.text = "Passive: " + passive;
 
-        Sprite foundSprite = characterSprites.Find(x => x.characterName == name)?.sprite;
-        characterImage.sprite = foundSprite != null ? foundSprite : defaultSprite;
+        // Sprite eşleştirmesini NAME üzerinden yap
+        string nameKey = name;
 
-        // Kart� olu�tur ve envantere ekle
+        Dictionary<string, Sprite> spriteDict = new();
+        foreach (var cs in characterSprites)
+        {
+            if (!spriteDict.ContainsKey(cs.characterName))
+                spriteDict[cs.characterName] = cs.sprite;
+        }
+        Debug.Log("🧩 QR Sprites Loaded: " + spriteDict.Count);
+
+        Sprite foundSprite;
+        if (spriteDict.TryGetValue(nameKey, out foundSprite))
+        {
+            Debug.Log("🖼️ Sprite bulundu ve atandı: " + foundSprite.name);
+            characterImage.sprite = foundSprite;
+        }
+        else
+        {
+            Debug.LogWarning("❌ Sprite bulunamadı, default atanıyor: " + nameKey);
+            characterImage.sprite = defaultSprite;
+        }
+
+        // Kartı oluştur ve envantere ekle
+        string id = data.ContainsKey("ID") ? data["ID"] : "NONE";
         CardData card = new CardData(
-            id: data["ID"],
+            id: id,
             cardName: name,
             baseHP: int.Parse(hp),
             baseDamage: int.Parse(str),
-            rarity: data.ContainsKey("RARITY") ? data["RARITY"] : "Yayg�n",
+            rarity: data.ContainsKey("RARITY") ? data["RARITY"] : "Yaygın",
             ability: ability,
             passive: passive,
             level: 1,

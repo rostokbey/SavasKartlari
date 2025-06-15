@@ -7,6 +7,11 @@ public class PlayerInventory : MonoBehaviour
     public int selectedCardIndex = 0;
     public int currentCooldown = 0;
 
+    void Awake()
+    {
+        DontDestroyOnLoad(this.gameObject); // 🌟 Sahne geçişinde silinmesin
+    }
+
     public CardData GetActiveCard()
     {
         if (myCards.Count > selectedCardIndex)
@@ -35,6 +40,7 @@ public class PlayerInventory : MonoBehaviour
             }
         }
     }
+
     public void AddCardFromExternal(CardData yeniOluşturulanCardData)
     {
         PlayerInventory inv = FindObjectOfType<PlayerInventory>();

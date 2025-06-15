@@ -28,7 +28,6 @@ public class LobbyUIManager : MonoBehaviour
         joinButton.onClick.AddListener(JoinGame);
     }
 
-
     public async void HostGame()
     {
         Allocation allocation = await RelayService.Instance.CreateAllocationAsync(1);
@@ -39,7 +38,11 @@ public class LobbyUIManager : MonoBehaviour
 
         NetworkManager.Singleton.StartHost();
         Debug.Log("Host started with code: " + joinCode);
+
+        // Doğru enum gönderimi:
+        FindObjectOfType<SceneUIController>()?.ShowOnly(SceneUIController.TargetPanel.DeckBuilder);
     }
+
     public async void JoinGame()
     {
         string joinCode = joinCodeInput.text;
@@ -50,5 +53,8 @@ public class LobbyUIManager : MonoBehaviour
 
         NetworkManager.Singleton.StartClient();
         Debug.Log("Joined game with code: " + joinCode);
+
+        // Doğru enum gönderimi:
+        FindObjectOfType<SceneUIController>()?.ShowOnly(SceneUIController.TargetPanel.DeckBuilder);
     }
 }

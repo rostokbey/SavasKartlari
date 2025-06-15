@@ -52,10 +52,9 @@ public class TurnDrawManager : MonoBehaviour
 
     void CreateCardUI(CardData card)
     {
-        GameObject slot = Instantiate(cardSlotPrefab, handParent);
-        var ui = slot.GetComponent<CardSlotUI>();
-        ui.SetCardInfo(card);
-        ui.OnCardClicked = () => TryPlayCard(card, slot);
+        GameObject cardUI = Instantiate(cardSlotPrefab, handParent);
+        var slot = cardUI.GetComponent<CardSlotUI>();
+        slot?.SetCardInfo(card);
     }
 
     void TryPlayCard(CardData card, GameObject slotUI)

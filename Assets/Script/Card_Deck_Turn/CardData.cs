@@ -13,9 +13,12 @@ public class CardData
     public int level;
     public int xp;
     public int skillCooldownMax;
-    public Sprite characterSprite;
 
-    public CardData(string id, string cardName, int baseHP, int baseDamage, string rarity, string ability, string passive, int level, int xp, int skillCooldownMax, Sprite characterSprite)
+    public Sprite characterSprite; // ✅ Sprite burada olmalı ve public olmalı
+
+
+
+public CardData(string id, string cardName, int baseHP, int baseDamage, string rarity, string ability, string passive, int level, int xp, int skillCooldownMax, Sprite characterSprite)
     {
         this.id = id;
         this.cardName = cardName;
