@@ -1,40 +1,34 @@
-// MatchReadyButton.cs (güncellenmiş - kart adları loga yazılıyor)
-
+ï»¿using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
-using Unity.Collections;
+using UnityEngine.UI;
 
 public class MatchReadyButton : MonoBehaviour
 {
-    public void OnReadyClicked()
+    public Button readyButton;
+
+    void Start()
     {
-        var deck = FindObjectOfType<DeckManagerObject>();
-        if (deck == null)
+        readyButton.onClick.AddListener(OnReadyClicked);
+    }
+
+    void OnReadyClicked()
+    {
+        var deckManager = FindObjectOfType<DeckManagerObject>();
+        if (deckManager == null)
         {
-            Debug.LogError("DeckManagerObject bulunamadı.");
+            Debug.LogError("âŒ DeckManagerObject bulunamadÄ±!");
             return;
         }
 
-        deck.PrepareMatchDeck();
-
-        // Kartları debugla
-        foreach (var card in deck.currentMatchDeck)
+        // Ã–rnek amaÃ§lÄ±: tÃ¼m fullDeck'teki kartlarÄ± seÃ§ili sayÄ±yoruz
+        List<string> selectedIds = new List<string>();
+        foreach (var card in deckManager.fullDeck)
         {
-            Debug.Log($"Seçili kart: {card.cardName}");
+            selectedIds.Add(card.id);
         }
 
-        FixedString128Bytes[] cardIdArray = deck.currentMatchDeck
-            .Select(card => (FixedString128Bytes)card.id)
-            .ToArray();
+        deckManager.PrepareMatchDeck(selectedIds);
 
-        var battleManager = FindObjectOfType<BattleManager>();
-        if (battleManager != null)
-        {
-            battleManager.SubmitDeckServerRpc(cardIdArray);
-        }
-        else
-        {
-            Debug.LogError("BattleManager bulunamadı.");
-        }
+        Debug.Log("âœ… MatchReadyButton -> PrepareMatchDeck Ã§aÄŸrÄ±ldÄ±.");
     }
 }

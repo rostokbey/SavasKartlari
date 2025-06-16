@@ -1,33 +1,33 @@
-// TurnDrawManager.cs – Her tur kart çekme, elde tutma ve sahaya koyma sistemi
-
 using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
 using Unity.Netcode;
 
 public class TurnDrawManager : MonoBehaviour
 {
-    public Transform handParent;               // Elde gösterilecek UI alaný
-    public GameObject cardSlotPrefab;          // Her kartý temsil eden prefab
+    [Header("Sahnedeki kart panel template")]
+    public GameObject cardPanelTemplate; // SetActive(false) yapýlmýþ panel (sahne içinde)
 
-    private List<CardData> handCards = new();  // Elde tutulan kartlar
-    private List<CardData> drawPile = new();   // Çekilecek kalan kartlar
+    [Header("Kartlarýn gösterileceði el alaný")]
+    public Transform handParent; // El kartlarýnýn gösterileceði layout
 
-    private const int maxHandSize = 5;         // Elde max 5 kart olabilir
-    private const int maxTotalPlays = 12;      // Maç boyunca en fazla 12 kart oynanabilir
-    private int totalPlayedCards = 0;
+    private List<CardData> handCards = new();
+    private Queue<CardData> drawQueue = new();
+    private int cardsPlayed = 0;
+    private const int MaxHandSize = 5;
+    private const int MaxCardsPerMatch = 12;
 
     private ulong localPlayerId => NetworkManager.Singleton.LocalClientId;
 
     void Start()
     {
-        // Match destesiyle baþlat
         var deck = FindObjectOfType<DeckManagerObject>();
-        drawPile = new List<CardData>(deck.currentMatchDeck);
-
-        Shuffle(drawPile);
-        DrawCard(); // ilk kart tur baþlarken
+        if (deck != null && deck.currentMatchDeck.Count > 0)
+        {
+            drawQueue = new Queue<CardData>(Shuffle(deck.currentMatchDeck));
+            DrawCard();
+        }
     }
 
     public void OnTurnStart()
@@ -37,54 +37,53 @@ public class TurnDrawManager : MonoBehaviour
 
     public void DrawCard()
     {
-        if (handCards.Count >= maxHandSize || drawPile.Count == 0)
-        {
-            Debug.Log("Elde yer yok veya kart kalmadý");
+        if (drawQueue.Count == 0 || handCards.Count >= MaxHandSize)
             return;
-        }
 
-        CardData card = drawPile[0];
-        drawPile.RemoveAt(0);
+        CardData card = drawQueue.Dequeue();
         handCards.Add(card);
 
-        CreateCardUI(card);
+        GameObject panel = Instantiate(cardPanelTemplate, handParent);
+        panel.SetActive(true);
+
+        panel.transform.Find("Image").GetComponent<Image>().sprite = card.characterSprite;
+        panel.transform.Find("nameText").GetComponent<TextMeshProUGUI>().text = card.cardName;
+        panel.transform.Find("levelText").GetComponent<TextMeshProUGUI>().text = "Seviye: " + card.level;
+        panel.transform.Find("xpText").GetComponent<TextMeshProUGUI>().text = "XP: " + card.xp + "/100";
+
+        Button btn = panel.GetComponent<Button>();
+        if (btn != null)
+            btn.onClick.AddListener(() => PlayCard(card, panel));
     }
 
-    void CreateCardUI(CardData card)
-    {
-        GameObject cardUI = Instantiate(cardSlotPrefab, handParent);
-        var slot = cardUI.GetComponent<CardSlotUI>();
-        slot?.SetCardInfo(card);
-    }
-
-    void TryPlayCard(CardData card, GameObject slotUI)
+    void PlayCard(CardData card, GameObject panelObj)
     {
         if (!TurnManager.Instance.IsMyTurn(localPlayerId))
         {
-            Debug.Log("Sýra sende deðil.");
+            Debug.Log("Sýra sende deðil");
             return;
         }
 
-        if (totalPlayedCards >= maxTotalPlays)
+        if (cardsPlayed >= MaxCardsPerMatch)
         {
-            Debug.Log("12 kart zaten oynandý");
+            Debug.Log("12 kart sýnýrý aþýldý");
             return;
         }
 
-        FindObjectOfType<BattleManager>().PlayCardServerRpc(card.id);
-
+        FindObjectOfType<BattleManager>()?.PlayCardServerRpc(card.id);
         handCards.Remove(card);
-        Destroy(slotUI);
-
-        totalPlayedCards++;
+        Destroy(panelObj);
+        cardsPlayed++;
     }
 
-    void Shuffle(List<CardData> list)
+    List<CardData> Shuffle(List<CardData> input)
     {
+        List<CardData> list = new(input);
         for (int i = 0; i < list.Count; i++)
         {
-            int rand = Random.Range(0, list.Count);
+            int rand = Random.Range(i, list.Count);
             (list[i], list[rand]) = (list[rand], list[i]);
         }
+        return list;
     }
 }

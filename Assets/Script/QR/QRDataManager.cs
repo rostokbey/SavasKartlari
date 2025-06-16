@@ -15,14 +15,6 @@ public class QRDataManager : MonoBehaviour
     public TextMeshProUGUI passiveText;
 
     public Sprite defaultSprite;
-    public List<CharacterSprite> characterSprites;
-
-    [System.Serializable]
-    public class CharacterSprite
-    {
-        public string characterName;
-        public Sprite sprite;
-    }
 
     private void Awake()
     {
@@ -41,11 +33,13 @@ public class QRDataManager : MonoBehaviour
                 data[pair[0]] = pair[1];
         }
 
+        string id = data.ContainsKey("ID") ? data["ID"] : "NONE";
         string name = data.ContainsKey("NAME") ? data["NAME"] : "Unknown";
         string hp = data.ContainsKey("HP") ? data["HP"] : "0";
         string str = data.ContainsKey("STR") ? data["STR"] : "0";
         string ability = data.ContainsKey("ABILITY") ? data["ABILITY"] : "None";
         string passive = data.ContainsKey("PASSIVE") ? data["PASSIVE"] : "None";
+        string rarity = data.ContainsKey("RARITY") ? data["RARITY"] : "Yaygın";
 
         nameText.text = name.Replace("_", " ");
         hpText.text = "HP: " + hp;
@@ -53,37 +47,25 @@ public class QRDataManager : MonoBehaviour
         abilityText.text = "Ability: " + ability;
         passiveText.text = "Passive: " + passive;
 
-        // Sprite eşleştirmesini NAME üzerinden yap
-        string nameKey = name;
-
-        Dictionary<string, Sprite> spriteDict = new();
-        foreach (var cs in characterSprites)
+        // ✅ Dinamik Sprite Yükleme
+        Sprite loadedSprite = Resources.Load<Sprite>("Characters/" + name);
+        if (loadedSprite != null)
         {
-            if (!spriteDict.ContainsKey(cs.characterName))
-                spriteDict[cs.characterName] = cs.sprite;
-        }
-        Debug.Log("🧩 QR Sprites Loaded: " + spriteDict.Count);
-
-        Sprite foundSprite;
-        if (spriteDict.TryGetValue(nameKey, out foundSprite))
-        {
-            Debug.Log("🖼️ Sprite bulundu ve atandı: " + foundSprite.name);
-            characterImage.sprite = foundSprite;
+            Debug.Log("🖼️ Dinamik sprite yüklendi: " + loadedSprite.name);
+            characterImage.sprite = loadedSprite;
         }
         else
         {
-            Debug.LogWarning("❌ Sprite bulunamadı, default atanıyor: " + nameKey);
+            Debug.LogWarning("❌ Dinamik sprite bulunamadı, default atanıyor: " + name);
             characterImage.sprite = defaultSprite;
         }
 
-        // Kartı oluştur ve envantere ekle
-        string id = data.ContainsKey("ID") ? data["ID"] : "NONE";
         CardData card = new CardData(
             id: id,
             cardName: name,
             baseHP: int.Parse(hp),
             baseDamage: int.Parse(str),
-            rarity: data.ContainsKey("RARITY") ? data["RARITY"] : "Yaygın",
+            rarity: rarity,
             ability: ability,
             passive: passive,
             level: 1,

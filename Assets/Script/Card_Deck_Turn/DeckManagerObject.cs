@@ -1,86 +1,51 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class DeckManagerObject : MonoBehaviour
 {
-    public List<CardData> fullDeck = new();      // 25 kartlık tam deste
-    public List<CardData> currentMatchDeck = new(); // Bu maçta kullanılabilir 12 kart
+    public List<CardData> fullDeck = new();
+    public List<CardData> currentMatchDeck = new();
 
-    public int maxDeckSize = 25;
-    public int matchCardLimit = 12;
-
-    void Awake()
+    [System.Serializable]
+    public class CharacterSprite
     {
-        DontDestroyOnLoad(this.gameObject); // 🌟 Sahne geçişinde silinmesin
+        public string characterName;
+        public Sprite sprite;
     }
 
-    public bool AddToDeck(CardData card)
+    public List<CharacterSprite> characterSprites;
+
+    public Sprite GetSpriteByName(string name)
     {
-        if (fullDeck.Count >= maxDeckSize)
-        {
-            Debug.Log("Deste dolu (25 kart)!");
-            return false;
-        }
-
-        if (!fullDeck.Exists(c => c.id == card.id))
-        {
-            fullDeck.Add(card);
-            Debug.Log("Kart eklendi: " + card.cardName);
-
-            return true;
-        }
-
-        Debug.Log("Kart zaten destede!");
-        return false;
+        var match = characterSprites.Find(c => c.characterName == name);
+        return match != null ? match.sprite : null;
     }
 
-    public void PrepareMatchDeck()
+    public CardData GetCardById(string id)
+    {
+        foreach (var card in fullDeck)
+        {
+            if (card.id == id)
+                return card;
+        }
+
+        Debug.LogWarning("❌ Kart bulunamadı, ID: " + id);
+        return null;
+    }
+
+    public void PrepareMatchDeck(List<string> selectedCardIds)
     {
         currentMatchDeck.Clear();
 
-        if (fullDeck.Count < 12)
+        foreach (string id in selectedCardIds)
         {
-            Debug.LogWarning("12'den az kart var!");
-            currentMatchDeck.AddRange(fullDeck);
+            CardData card = GetCardById(id);
+            if (card != null)
+                currentMatchDeck.Add(card);
+            else
+                Debug.LogWarning($"❌ ID {id} ile kart bulunamadı.");
         }
-        else
-        {
-            currentMatchDeck.AddRange(fullDeck.Take(12));
-        }
 
-        Debug.Log($"Maç destesi hazır: {currentMatchDeck.Count} kart");
-    }
-
-    public List<List<CardData>> savedDecks = new(); // Çoklu 25'lik deste
-
-    public void SaveDeck(List<CardData> newDeck)
-    {
-        if (newDeck.Count == 25)
-            savedDecks.Add(new List<CardData>(newDeck));
-    }
-
-
-    public bool IsCardInMatchDeck(string cardId)
-    {
-        return currentMatchDeck.Exists(c => c.id == cardId);
-    }
-
-    public CardData GetCardById(string cardId)
-    {
-        return currentMatchDeck.Find(c => c.id == cardId);
-    }
-
-    public void SelectDeck(int index)
-    {
-        if (index >= 0 && index < savedDecks.Count)
-        {
-            currentMatchDeck = new List<CardData>(savedDecks[index]);
-            Debug.Log($"🎯 {index}. deste seçildi. Kart sayısı: {currentMatchDeck.Count}");
-        }
-        else
-        {
-            Debug.LogWarning("❌ Geçersiz deste indexi!");
-        }
+        Debug.Log("🧩 Maç destesi hazır: " + currentMatchDeck.Count + " kart");
     }
 }
