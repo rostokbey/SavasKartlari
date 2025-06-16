@@ -1,51 +1,47 @@
-﻿// DeckSelectionUIManager.cs
-// 25'lik kaydedilmiş desteleri ScrollView'da gösterir, seçim yapılınca savaşa geçer
-
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public class DeckSelectionUIManager : MonoBehaviour
 {
-    public GameObject deckButtonPrefab; // Her deste için bir UI butonu (CardSlotUI ya da özel prefab)
-    public Transform contentParent;     // ScrollView > Viewport > Content objesi
+    public Transform contentParent; // ScrollView Content objesi
+    public List<Transform> cardUIElements; // Sahne üzerindeki her kart UI nesnesi
 
     private DeckManagerObject deckManager;
-    private SceneUIController sceneUI;
 
     void Start()
     {
         deckManager = FindObjectOfType<DeckManagerObject>();
-        sceneUI = FindObjectOfType<SceneUIController>();
-
-        if (deckManager == null || sceneUI == null)
-        {
-            Debug.LogError("DeckManagerObject veya SceneUIController bulunamadı!");
-            return;
-        }
-
         DisplayDeckOptions();
     }
 
-    void DisplayDeckOptions()
+    public void DisplayDeckOptions()
     {
-        if (deckManager.fullDeck.Count == 0)
+        Debug.Log("📋 Deck seçenekleri gösteriliyor.");
+        if (deckManager == null || deckManager.fullDeck.Count == 0)
         {
-            Debug.LogWarning("❌ QR'dan hiç kart eklenmemiş!");
+            Debug.LogWarning("⚠️ Kart yok veya DeckManager eksik.");
             return;
         }
 
-        for (int i = 0; i < deckManager.fullDeck.Count; i++)
+        for (int i = 0; i < deckManager.fullDeck.Count && i < cardUIElements.Count; i++)
         {
-            CardData card = deckManager.fullDeck[i];
+            var ui = cardUIElements[i];
+            var data = deckManager.fullDeck[i];
 
-            GameObject buttonObj = Instantiate(deckButtonPrefab, contentParent);
-            buttonObj.transform.localScale = Vector3.one;
+            ui.Find("NameText").GetComponent<TextMeshProUGUI>().text = data.cardName;
+            ui.Find("LevelText").GetComponent<TextMeshProUGUI>().text = "Seviye: " + data.level;
+            ui.Find("XpText").GetComponent<TextMeshProUGUI>().text = "XP: " + data.xp;
+            ui.Find("Image").GetComponent<Image>().sprite = data.characterSprite;
 
-            CardSlotUI ui = buttonObj.GetComponent<CardSlotUI>();
-            if (ui != null)
-                ui.SetCardInfo(card);
+            ui.gameObject.SetActive(true);
+        }
+
+        // Kullanılmayan UI slotlarını kapat
+        for (int i = deckManager.fullDeck.Count; i < cardUIElements.Count; i++)
+        {
+            cardUIElements[i].gameObject.SetActive(false);
         }
     }
 }
