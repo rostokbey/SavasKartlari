@@ -24,8 +24,9 @@ public class CardData
     public string lore;
     public string combo;
     public string story;
+    public string className;
+   
     
-
 
 
 
