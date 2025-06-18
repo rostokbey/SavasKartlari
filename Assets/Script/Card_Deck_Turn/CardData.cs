@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [System.Serializable]
 public class CardData
@@ -7,6 +7,7 @@ public class CardData
     public string cardName;
     public int baseHP;
     public int baseDamage;
+    public int dex;
     public string rarity;
     public string ability;
     public string passive;
@@ -14,6 +15,19 @@ public class CardData
     public int xp;
     public int skillCooldownMax;
     public Sprite characterSprite;
+
+    // 👇 Detay paneli için gereken alanlar (bunlar eksikmiş)
+    
+    public string cardClass;
+    public string race;
+    public string combination;
+    public string lore;
+    public string combo;
+    public string story;
+    
+
+
+
 
     public CardData(string id, string cardName, int baseHP, int baseDamage, string rarity,
                     string ability, string passive, int level, int xp, int skillCooldownMax,
