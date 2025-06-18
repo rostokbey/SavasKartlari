@@ -7,10 +7,7 @@ public class PlayerInventory : MonoBehaviour
     public int selectedCardIndex = 0;
     public int currentCooldown = 0;
 
-    void Awake()
-    {
-        DontDestroyOnLoad(this.gameObject); // 🌟 Sahne geçişinde silinmesin
-    }
+
 
     public CardData GetActiveCard()
     {
@@ -66,4 +63,14 @@ public class PlayerInventory : MonoBehaviour
         if (currentCooldown > 0)
             currentCooldown--;
     }
+    public static PlayerInventory Instance;
+
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+
+        DontDestroyOnLoad(this.gameObject);
+    }
+
 }
