@@ -206,15 +206,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 52
+  m_fontSizeBase: 52
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -968,8 +968,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 955.7149, y: -1062.2}
-  m_SizeDelta: {x: 373.4298, y: 184.35}
+  m_AnchoredPosition: {x: 952.5, y: -1055.2}
+  m_SizeDelta: {x: 435, y: 198.35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &172506684
 MonoBehaviour:
@@ -2591,14 +2591,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 794599923}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4bd810973cada0f4a8cacf50862bf725, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  contentParent: {fileID: 0}
-  cardPanelTemplate: {fileID: 0}
-  deckManager: {fileID: 0}
+  contentParent: {fileID: 1999956193}
+  cardPanelTemplate: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
+  deckManager: {fileID: 1775321797}
 --- !u!1 &814252401
 GameObject:
   m_ObjectHideFlags: 0
@@ -3050,7 +3050,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &894809411
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3351,6 +3351,7 @@ GameObject:
   - component: {fileID: 905478288}
   - component: {fileID: 905478290}
   - component: {fileID: 905478289}
+  - component: {fileID: 905478291}
   m_Layer: 5
   m_Name: CardDetailPanel
   m_TagString: Untagged
@@ -3425,6 +3426,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 905478287}
   m_CullTransparentMesh: 1
+--- !u!225 &905478291
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 905478287}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &909650224
 GameObject:
   m_ObjectHideFlags: 0
@@ -4108,6 +4121,9 @@ MonoBehaviour:
   rarityText: {fileID: 47179956}
   passiveText: {fileID: 1914340623}
   abilityText: {fileID: 901608395}
+  storyDatabase: {fileID: 11400000, guid: e89d41f864ec7ae4cafbfd1b778e9a8e, type: 2}
+  canvasGroup: {fileID: 905478291}
+  fadeDuration: 0.3
 --- !u!4 &1042065708
 Transform:
   m_ObjectHideFlags: 0
@@ -4644,8 +4660,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 52
-  m_fontSizeBase: 52
+  m_fontSize: 55
+  m_fontSizeBase: 55
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -5329,8 +5345,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 221, y: -1062.1735}
-  m_SizeDelta: {x: 396, y: 184.3468}
+  m_AnchoredPosition: {x: 217.5, y: -1055.2}
+  m_SizeDelta: {x: 435, y: 198.35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1382355043
 MonoBehaviour:
@@ -5513,15 +5529,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 52
+  m_fontSizeBase: 52
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0

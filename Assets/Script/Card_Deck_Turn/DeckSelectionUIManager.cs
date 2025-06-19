@@ -11,6 +11,16 @@ public class DeckSelectionUIManager : MonoBehaviour
 
     void Start()
     {
+        if (deckManager == null)
+        {
+            deckManager = FindObjectOfType<DeckManagerObject>();
+            if (deckManager == null)
+            {
+                Debug.LogError("❌ DeckManagerObject bulunamadı!");
+                return;
+            }
+        }
+
         DisplayDeckOptions();
     }
 

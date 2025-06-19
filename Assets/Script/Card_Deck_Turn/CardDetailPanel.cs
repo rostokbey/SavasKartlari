@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class CardDetailPanel : MonoBehaviour
 {
@@ -19,6 +20,10 @@ public class CardDetailPanel : MonoBehaviour
     public TMP_Text rarityText;
     public TMP_Text passiveText;
     public TMP_Text abilityText;
+    public CharacterStoryDatabase storyDatabase;
+    public CanvasGroup canvasGroup; // UI > Canvas Group bileşeni
+    public float fadeDuration = 0.3f;
+
 
     private void Awake()
     {
@@ -33,15 +38,31 @@ public class CardDetailPanel : MonoBehaviour
         classText.text = "Class: " + card.className;
         raceText.text = "Irk: " + card.race;
         comboText.text = "Kombinasyon: " + card.combo;
-        storyText.text = "Hikaye: " + card.story;
+        storyText.text = "Hikaye: " + storyDatabase.GetStory(card.cardName);
         rarityText.text = "Nadirlik: " + card.rarity;
         passiveText.text = "Pasif: " + card.passive;
         abilityText.text = "Aktif: " + card.ability;
 
         panel.SetActive(true);
+        StartCoroutine(FadeIn());
+
         if (inventoryPanel != null)
-            inventoryPanel.SetActive(false); // Envanteri gizle
+            inventoryPanel.SetActive(false);
     }
+
+    IEnumerator FadeIn()
+    {
+        canvasGroup.alpha = 0;
+        float t = 0;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(0, 1, t / fadeDuration);
+            yield return null;
+        }
+        canvasGroup.alpha = 1;
+    }
+
 
     public void ClosePanel()
     {

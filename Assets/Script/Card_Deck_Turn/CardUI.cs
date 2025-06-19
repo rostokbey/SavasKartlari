@@ -9,6 +9,9 @@ public class CardUI : MonoBehaviour
     public TMP_Text hpText;
     public TMP_Text strText;
     public TMP_Text dexText;
+    public TMP_Text levelText;
+    public TMP_Text xpText;
+
 
     private CardData cardData;
 
@@ -47,7 +50,14 @@ public class CardUI : MonoBehaviour
 
         if (dexText != null)
             dexText.text = "DEX: " + data.dex;
+
+        if (dexText != null)
+            dexText.text = "LEVEL: " + data.level;
+
+        if (dexText != null)
+            dexText.text = "XP: " + data.xp;
     }
+
 
     public void OnCardClicked()
     {
