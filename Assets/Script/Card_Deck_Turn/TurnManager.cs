@@ -38,6 +38,8 @@ public class TurnManager : NetworkBehaviour
         SendTurnStartedClientRpc(currentTurnPlayer.Value);
     }
 
+   
+
     [ClientRpc]
     private void SendTurnStartedClientRpc(ulong currentPlayerId)
     {

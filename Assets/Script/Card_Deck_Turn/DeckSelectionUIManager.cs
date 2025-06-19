@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class DeckSelectionUIManager : MonoBehaviour
 {
     public RectTransform contentParent; // ScrollView -> Content
-    public GameObject cardPanelTemplate; // Sahnedeki pasif panel
+    public GameObject cardUIPrefab; 	// CardUI prefab
     public DeckManagerObject deckManager;
 
     void Start()
@@ -26,8 +26,6 @@ public class DeckSelectionUIManager : MonoBehaviour
 
     public void DisplayDeckOptions()
     {
-        Debug.Log("Deck seçenekleri gösteriliyor.");
-
         if (deckManager == null || deckManager.fullDeck.Count == 0)
         {
             Debug.LogWarning("❌ DeckManager yok veya kart eklenmemiş.");
@@ -35,18 +33,18 @@ public class DeckSelectionUIManager : MonoBehaviour
         }
 
         foreach (Transform child in contentParent)
-            Destroy(child.gameObject); // Önce temizlik
+        {
+            Destroy(child.gameObject);
+        }
 
         foreach (CardData card in deckManager.fullDeck)
         {
-            GameObject panel = Instantiate(cardPanelTemplate, contentParent);
-            panel.SetActive(true);
-
-            // Atamaları yap
-            panel.transform.Find("Image").GetComponent<Image>().sprite = card.characterSprite;
-            panel.transform.Find("nameText").GetComponent<TextMeshProUGUI>().text = card.cardName;
-            panel.transform.Find("levelText").GetComponent<TextMeshProUGUI>().text = "Seviye: " + card.level;
-            panel.transform.Find("xpText").GetComponent<TextMeshProUGUI>().text = "XP: " + card.xp + "/100";
+            GameObject cardGO = Instantiate(cardUIPrefab, contentParent);
+            CardUI cardUI = cardGO.GetComponent<CardUI>();
+            if (cardUI != null)
+            {
+                cardUI.SetCardData(card);
+            }
         }
     }
 }

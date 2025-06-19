@@ -447,6 +447,7 @@ GameObject:
   m_Component:
   - component: {fileID: 53727840}
   - component: {fileID: 53727841}
+  - component: {fileID: 53727842}
   m_Layer: 0
   m_Name: TurnDrawManager
   m_TagString: Untagged
@@ -483,6 +484,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardPanelTemplate: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
   contentParent: {fileID: 1999956193}
+--- !u!114 &53727842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 53727837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20877993505274d4f9bee8ee56dc3cd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cardUIPrefab: {fileID: 0}
+  handParent: {fileID: 64656008}
 --- !u!1 &62616707
 GameObject:
   m_ObjectHideFlags: 0
@@ -2591,13 +2606,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 794599923}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4bd810973cada0f4a8cacf50862bf725, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   contentParent: {fileID: 1999956193}
-  cardPanelTemplate: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
+  cardUIPrefab: {fileID: 0}
   deckManager: {fileID: 1775321797}
 --- !u!1 &814252401
 GameObject:
