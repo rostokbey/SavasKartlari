@@ -5,6 +5,7 @@ public class DeckManagerObject : MonoBehaviour
 {
     public List<CardData> fullDeck = new();
     public List<CardData> currentMatchDeck = new();
+    public List<CardData> matchDeck = new List<CardData>();  // Seçilen 25'lik savaş destesini tutar
 
     [System.Serializable]
     public class CharacterSprite

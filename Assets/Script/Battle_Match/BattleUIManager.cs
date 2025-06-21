@@ -1,73 +1,46 @@
 ﻿using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
 public class BattleUIManager : MonoBehaviour
 {
-    public GameObject lobbyUI;
-    public GameObject deckUI;
-    public GameObject cardCollectionUI;
+    [Header("Oyuncu Alanı")]
+    public Image playerImage;
+    public TMP_Text playerNameText;
+    public TMP_Text playerHPText;
+    public TMP_Text playerSTRText;
+    public TMP_Text playerLevelText;
+    public TMP_Text playerXPText;
 
-    public Button attackButton;
-    public Button skillButton;
+    [Header("Düşman Alanı")]
+    public Image enemyImage;
+    public TMP_Text enemyNameText;
+    public TMP_Text enemyHPText;
+    public TMP_Text enemySTRText;
+    public TMP_Text enemyLevelText;
 
-    public Sprite testPlayerSprite; // Inspector üzerinden atayabilirsin
-    public Sprite testEnemySprite;
-
-    public void StartBattle()
+    public void SetupBattleUI(CardData playerCard, CardData enemyCard)
     {
-        // UI'leri kapat
-        if (lobbyUI != null) lobbyUI.SetActive(false);
-        if (deckUI != null) deckUI.SetActive(false);
-        if (cardCollectionUI != null) cardCollectionUI.SetActive(false);
-
-        // Savaş butonlarını aç
-        if (attackButton != null) attackButton.gameObject.SetActive(true);
-        if (skillButton != null) skillButton.gameObject.SetActive(true);
-
-        // Test için örnek kartlar
-        List<CardData> playerDeck = new List<CardData>
+        // Oyuncu kartı bilgileri
+        if (playerCard != null)
         {
-            new CardData(
-                id: "PLAYER001",
-                cardName: "Savaşçı",
-                baseHP: 100,
-                baseDamage: 20,
-                ability: "Fireball",
-                passive: "Savunma",
-                rarity: "Yaygın",
-                level: 1,
-                xp: 0,
-                skillCooldownMax: 3,
-                characterSprite: testPlayerSprite // Opsiyonel, null olabilir
-            )
-        };
-
-        List<CardData> enemyDeck = new List<CardData>
-        {
-            new CardData(
-                id: "ENEMY001",
-                cardName: "Canavar",
-                baseHP: 90,
-                baseDamage: 25,
-                ability: "Poison",
-                passive: "Zehir",
-                rarity: "Efsanevi",
-                level: 1,
-                xp: 0,
-                skillCooldownMax: 2,
-                characterSprite: testEnemySprite
-            )
-        };
-
-        // Karakterleri sahneye yerleştir
-        if (BattleManager.Instance != null)
-        {
-            BattleManager.Instance.SpawnCharacters(playerDeck, enemyDeck);
+            playerImage.sprite = playerCard.characterSprite;
+            playerNameText.text = playerCard.cardName.Replace("_", " ");
+            playerHPText.text = "HP: " + playerCard.baseHP;
+            playerSTRText.text = "STR: " + playerCard.baseDamage;
+            playerLevelText.text = "Lv: " + playerCard.level;
+            playerXPText.text = "XP: " + playerCard.xp + "/100";
         }
-        else
+
+        // Düşman kartı bilgileri
+        if (enemyCard != null)
         {
-            Debug.LogError("❌ BattleManager.Instance bulunamadı!");
+            enemyImage.sprite = enemyCard.characterSprite; // Null olabilir
+            enemyNameText.text = enemyCard.cardName;
+            enemyHPText.text = "HP: " + enemyCard.baseHP;
+            enemySTRText.text = "STR: " + enemyCard.baseDamage;
+            enemyLevelText.text = "Lv: " + enemyCard.level;
         }
     }
 }

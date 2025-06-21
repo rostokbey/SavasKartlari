@@ -1,47 +1,41 @@
-﻿// StartBattleManager.cs
-// Seçilen desteyi kullanarak savaşı başlatır (tek oyunculu demo için uygundur)
-
+﻿using System.Collections.Generic;
 using UnityEngine;
-using Unity.Netcode;
-using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class StartBattleManager : MonoBehaviour
 {
-    private DeckManagerObject deckManager;
-    private BattleManager battleManager;
+    public static StartBattleManager Instance;
 
-    void Start()
+    public List<CardData> currentPlayerDeck;
+
+    private void Awake()
     {
-        deckManager = FindObjectOfType<DeckManagerObject>();
-        battleManager = FindObjectOfType<BattleManager>();
-
-        if (deckManager == null || battleManager == null)
+        if (Instance == null)
         {
-            Debug.LogError("DeckManager veya BattleManager bulunamadı!");
-            return;
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Sahne değişiminde kaybolmasın
+        }
+        else
+        {
+            Destroy(gameObject);
         }
     }
 
-    public void StartBattleFromDeck()
+    /// <summary>
+    /// Maça girerken oyuncunun kartlarını gönder
+    /// </summary>
+    public void StartBattle(List<CardData> playerDeck)
     {
-        if (deckManager.currentMatchDeck == null || deckManager.currentMatchDeck.Count == 0)
+        if (playerDeck == null || playerDeck.Count == 0)
         {
-            Debug.LogWarning("Seçili maç destesi boş. Savaşa geçilemiyor.");
+            Debug.LogError("❌ StartBattle: Oyuncu destesi boş!");
             return;
         }
 
-        List<CardData> playerCards = new List<CardData>(deckManager.currentMatchDeck);
-        List<CardData> enemyCards = new List<CardData>(deckManager.currentMatchDeck); // demo için kendi destesini kopyalıyoruz
+        currentPlayerDeck = new List<CardData>(playerDeck); // Maç için desteyi kaydet
+        Debug.Log("✅ Savaş başlatılıyor. Kart sayısı: " + currentPlayerDeck.Count);
 
-        if (!NetworkManager.Singleton.IsServer)
-        {
-            Debug.LogWarning("Savaş başlatmak için sunucu olman gerekiyor.");
-            return;
-        }
-
-        battleManager.SpawnCharacters(playerCards, enemyCards);
-        battleManager.StartBattle();
-
-        Debug.Log("✅ Savaş başlatıldı (tek oyunculu demo). Karakterler sahaya dizildi.");
+        // Battle sahnesine geç
+        SceneManager.LoadScene("BattleScene");
     }
 }
