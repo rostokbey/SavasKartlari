@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿
+
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -6,36 +8,44 @@ public class StartBattleManager : MonoBehaviour
 {
     public static StartBattleManager Instance;
 
-    public List<CardData> currentPlayerDeck;
+    [HideInInspector]
+    public List<CardData> selectedMatchCards = new();
 
-    private void Awake()
+    void Awake()
     {
+        // Singleton Pattern
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Sahne değişiminde kaybolmasın
+            DontDestroyOnLoad(gameObject); // Sahne geçişlerinde yok olmasın
         }
         else
         {
-            Destroy(gameObject);
+            Destroy(gameObject); // Zaten varsa yenisini sil
         }
     }
 
-    /// <summary>
-    /// Maça girerken oyuncunun kartlarını gönder
-    /// </summary>
-    public void StartBattle(List<CardData> playerDeck)
+    public void SetSelectedCards(List<CardData> cards)
     {
-        if (playerDeck == null || playerDeck.Count == 0)
+        selectedMatchCards = new List<CardData>(cards);
+    }
+
+    public List<CardData> GetSelectedCards()
+    {
+        return selectedMatchCards;
+    }
+    public void StartBattle()
+    {
+        var deckManager = FindObjectOfType<DeckManagerObject>();
+        if (deckManager == null || deckManager.currentMatchDeck.Count == 0)
         {
-            Debug.LogError("❌ StartBattle: Oyuncu destesi boş!");
+            Debug.LogError("❌ Maç destesi boş veya DeckManagerObject bulunamadı.");
             return;
         }
 
-        currentPlayerDeck = new List<CardData>(playerDeck); // Maç için desteyi kaydet
-        Debug.Log("✅ Savaş başlatılıyor. Kart sayısı: " + currentPlayerDeck.Count);
-
-        // Battle sahnesine geç
+        selectedMatchCards = new List<CardData>(deckManager.currentMatchDeck);
         SceneManager.LoadScene("BattleScene");
     }
+
+
 }

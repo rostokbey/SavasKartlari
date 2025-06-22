@@ -5,7 +5,7 @@ public class DeckManagerObject : MonoBehaviour
 {
     public List<CardData> fullDeck = new();
     public List<CardData> currentMatchDeck = new();
-    public List<CardData> matchDeck = new List<CardData>();  // Seçilen 25'lik savaş destesini tutar
+    public List<CardData> matchDeck = new List<CardData>();
 
     [System.Serializable]
     public class CharacterSprite
@@ -48,5 +48,11 @@ public class DeckManagerObject : MonoBehaviour
         }
 
         Debug.Log("🧩 Maç destesi hazır: " + currentMatchDeck.Count + " kart");
+    }
+
+    
+    public List<CardData> GetSelectedCards()
+    {
+        return currentMatchDeck;
     }
 }

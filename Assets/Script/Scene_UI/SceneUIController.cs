@@ -8,7 +8,7 @@ public class SceneUIController : MonoBehaviour
         QR,
         DeckBuilder,
         DeckSelect,
-        BattleUI,
+        
         Result
     }
 
@@ -16,7 +16,7 @@ public class SceneUIController : MonoBehaviour
     public GameObject qrPanel;
     public GameObject deckBuilderPanel;
     public GameObject deckSelectPanel;
-    public GameObject battleUIPanel;
+   
     public GameObject resultPanel;
 
     void Start()
@@ -30,7 +30,7 @@ public class SceneUIController : MonoBehaviour
         qrPanel.SetActive(target == TargetPanel.QR);
         deckBuilderPanel.SetActive(target == TargetPanel.DeckBuilder);
         deckSelectPanel.SetActive(target == TargetPanel.DeckSelect);
-        battleUIPanel.SetActive(target == TargetPanel.BattleUI);
+        
         resultPanel.SetActive(target == TargetPanel.Result);
     }
 }

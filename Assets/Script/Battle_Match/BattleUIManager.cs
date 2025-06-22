@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 public class BattleUIManager : MonoBehaviour
 {
+    public static BattleUIManager Instance; // Singleton
+
     [Header("Oyuncu Alanı")]
     public Image playerImage;
     public TMP_Text playerNameText;
@@ -20,6 +21,14 @@ public class BattleUIManager : MonoBehaviour
     public TMP_Text enemySTRText;
     public TMP_Text enemyLevelText;
 
+    private void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
+
     public void SetupBattleUI(CardData playerCard, CardData enemyCard)
     {
         // Oyuncu kartı bilgileri
@@ -27,8 +36,7 @@ public class BattleUIManager : MonoBehaviour
         {
             playerImage.sprite = playerCard.characterSprite;
             playerNameText.text = playerCard.cardName.Replace("_", " ");
-            playerHPText.text = "HP: " + playerCard.baseHP;
-            playerSTRText.text = "STR: " + playerCard.baseDamage;
+            playerHPText.text = "HP: " + playerCard.baseHP; playerSTRText.text = "STR: " + playerCard.baseDamage;
             playerLevelText.text = "Lv: " + playerCard.level;
             playerXPText.text = "XP: " + playerCard.xp + "/100";
         }

@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class MatchReadyButton : MonoBehaviour
 {
@@ -8,7 +9,14 @@ public class MatchReadyButton : MonoBehaviour
 
     void Start()
     {
-        readyButton.onClick.AddListener(OnReadyClicked);
+        if (readyButton != null)
+        {
+            readyButton.onClick.AddListener(OnReadyClicked);
+        }
+        else
+        {
+            Debug.LogError("Ready button atanmadı!");
+        }
     }
 
     void OnReadyClicked()
@@ -20,7 +28,6 @@ public class MatchReadyButton : MonoBehaviour
             return;
         }
 
-        // Örnek amaçlı: tüm fullDeck'teki kartları seçili sayıyoruz
         List<string> selectedIds = new List<string>();
         foreach (var card in deckManager.fullDeck)
         {

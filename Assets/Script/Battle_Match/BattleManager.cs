@@ -1,30 +1,38 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.UI;
 using Unity.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 public class BattleManager : NetworkBehaviour
 {
     public static BattleManager Instance;
 
-    public GameObject characterPrefab;
+    [Header("Kart Prefabları ve Konumları")]
+    public GameObject characterPrefab; // Karakter prefabı (spawn için)
+    public GameObject cardPrefab; // CardUI prefabı (UI için)
     public Transform[] playerGridPositions;
     public Transform[] enemyGridPositions;
+
+    [Header("Spawner Noktaları")]
     public Transform playerSpawnPoint;
     public Transform enemySpawnPoint;
 
+    [Header("UI")]
     public Button attackButton;
     public Button skillButton;
+    public Transform enemyCardParent; // düşman kartlarının UI'ı burada gösterilecek
+    public GameObject cardSlotPrefab; // düşman kartı için slot prefabı
 
-    public Transform enemyCardParent;
-    public GameObject cardSlotPrefab;
-
+    [Header("Turn Yönetimi")]
     public ulong currentTurnClientId;
 
     private List<Character> allCharacters = new();
     private Dictionary<ulong, List<string>> playerSubmittedCardIds = new();
+
+    private List<Character> turnOrder = new();
+    private int currentIndex = 0;
 
     void Awake()
     {
@@ -34,18 +42,61 @@ public class BattleManager : NetworkBehaviour
 
     void Start()
     {
-        if (IsServer && NetworkManager.Singleton.ConnectedClientsList.Count > 0)
-        {
+        if (!IsServer) return;
+        SpawnEnemyCards();
+        if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
+    }
+
+    #region Düşman Kartlarını Oluşturma
+
+    void SpawnEnemyCards()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            CardData dummyEnemyCard = new CardData(
+                "enemy_" + i,
+                "Düşman " + (i + 1),
+                100,
+                20,
+                "Rare",
+                "Fire",
+                "Shield",
+                1,
+                0,
+                3,
+                null
+            );
+
+            GameObject slot = Instantiate(cardSlotPrefab, enemyCardParent);
+            CardUI ui = slot.GetComponent<CardUI>();
+            if (ui != null)
+            {
+                ui.SetCardData(dummyEnemyCard);
+            }
         }
     }
 
-    void Update()
+    #endregion
+
+    #region Oyuncu Kartlarını Yerleştirme
+
+    public void SpawnPlayerCards(List<CardData> selectedCards)
     {
-        bool isTurn = NetworkManager.Singleton.LocalClientId == currentTurnClientId;
-        attackButton.interactable = isTurn;
-        skillButton.interactable = isTurn;
+        for (int i = 0; i < selectedCards.Count && i < playerGridPositions.Length; i++)
+        {
+            var cardData = selectedCards[i];
+            GameObject go = Instantiate(cardPrefab, playerGridPositions[i].position, Quaternion.identity);
+            go.transform.SetParent(playerGridPositions[i]);
+            CardUI ui = go.GetComponent<CardUI>();
+            if (ui != null)
+                ui.SetCardData(cardData);
+        }
     }
+
+    #endregion
+
+    #region Karakter Spawn & Turn Sistemi
 
     public void SpawnCharacters(List<CardData> playerCards, List<CardData> enemyCards)
     {
@@ -88,9 +139,6 @@ public class BattleManager : NetworkBehaviour
         }
     }
 
-    public List<Character> turnOrder = new();
-    private int currentIndex = 0;
-
     public void StartBattle()
     {
         turnOrder = new List<Character>(FindObjectsOfType<Character>());
@@ -110,18 +158,41 @@ public class BattleManager : NetworkBehaviour
         turnOrder[currentIndex].SetTurn(true);
     }
 
-    public void ShowEnemyDeck(List<CardData> enemyCards)
-    {
-        foreach (Transform child in enemyCardParent)
-            Destroy(child.gameObject);
+    #endregion
 
-        foreach (CardData card in enemyCards)
+    #region RPC ve Kart Gönderme
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SubmitDeckServerRpc(FixedString128Bytes[] cardIdArray, ServerRpcParams rpcParams = default)
+    {
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        List<string> cardIds = cardIdArray.Select(id => id.ToString()).ToList();
+
+        playerSubmittedCardIds[senderId] = cardIds;
+        Debug.Log("📨 Oyuncu senderId, cardIds.Count kart gönderdi.");
+        Debug.Log("🎮 Toplam gönderilen deste sayısı: {playerSubmittedCardIds.Count}");
+
+        if (playerSubmittedCardIds.Count >= 2)
         {
-            GameObject slot = Instantiate(cardSlotPrefab, enemyCardParent);
-            slot.transform.localScale = Vector3.one;
+            Debug.Log("🚀 Her iki oyuncudan deste geldi, karakterler spawn ediliyor...");
+            SpawnCharactersFromSubmittedDecks();
         }
     }
 
+    private void SpawnCharactersFromSubmittedDecks()
+    {
+        var players = new List<ulong>(playerSubmittedCardIds.Keys);
+        var deck1 = playerSubmittedCardIds[players[0]];
+        var deck2 = playerSubmittedCardIds[players[1]];
+
+        var deckManager = FindObjectOfType<DeckManagerObject>();
+
+        var playerCards = deck1.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
+        var enemyCards = deck2.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
+
+        SpawnCharacters(playerCards, enemyCards);
+        StartBattle();
+    }
     [ServerRpc(RequireOwnership = false)]
     public void SendAttackServerRpc()
     {
@@ -135,6 +206,34 @@ public class BattleManager : NetworkBehaviour
         Debug.Log("Yetenek kullanıldı: " + ability);
         EndTurn();
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void PlayCardServerRpc(string cardId, ServerRpcParams rpcParams = default)
+    {
+        ulong senderClientId = rpcParams.Receive.SenderClientId;
+
+        var card = FindObjectOfType<DeckManagerObject>().GetCardById(cardId);
+        if (card == null)
+        {
+            Debug.LogWarning("Kart bulunamadı: " + cardId);
+            return;
+        }
+
+        Vector3 spawnPos = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId
+            ? playerSpawnPoint.position
+            : enemySpawnPoint.position;
+
+        GameObject obj = Instantiate(characterPrefab, spawnPos, Quaternion.identity);
+        var ch = obj.GetComponent<Character>();
+        ch.Setup(card);
+
+        obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(senderClientId);
+        allCharacters.Add(ch);
+    }
+
+    #endregion
+
+    #region Victory & Rewards
 
     public void CheckVictory()
     {
@@ -176,61 +275,24 @@ public class BattleManager : NetworkBehaviour
         }
     }
 
+    #endregion
 
-    [ServerRpc(RequireOwnership = false)]
-    public void SubmitDeckServerRpc(FixedString128Bytes[] cardIdArray, ServerRpcParams rpcParams = default)
+    #region UI Güncelleme
+
+    public void ShowEnemyDeck(List<CardData> enemyCards)
     {
-        ulong senderId = rpcParams.Receive.SenderClientId;
-        List<string> cardIds = cardIdArray.Select(id => id.ToString()).ToList();
+        foreach (Transform child in enemyCardParent)
+            Destroy(child.gameObject);
 
-        playerSubmittedCardIds[senderId] = cardIds;
-        Debug.Log($"📨 Oyuncu {senderId}, {cardIds.Count} kart gönderdi.");
-        Debug.Log($"🎮 Toplam gönderilen deste sayısı: {playerSubmittedCardIds.Count}");
-
-        if (playerSubmittedCardIds.Count >= 2)
+        foreach (CardData card in enemyCards)
         {
-            Debug.Log("🚀 Her iki oyuncudan deste geldi, karakterler spawn ediliyor...");
-            SpawnCharactersFromSubmittedDecks();
+            GameObject slot = Instantiate(cardSlotPrefab, enemyCardParent); slot.transform.localScale = Vector3.one;
+
+            CardUI ui = slot.GetComponent<CardUI>();
+            if (ui != null)
+                ui.SetCardData(card);
         }
     }
 
-
-    private void SpawnCharactersFromSubmittedDecks()
-    {
-        var players = new List<ulong>(playerSubmittedCardIds.Keys);
-        var deck1 = playerSubmittedCardIds[players[0]];
-        var deck2 = playerSubmittedCardIds[players[1]];
-
-        var deckManager = FindObjectOfType<DeckManagerObject>();
-
-        var playerCards = deck1.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
-        var enemyCards = deck2.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
-
-        SpawnCharacters(playerCards, enemyCards);
-        StartBattle();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void PlayCardServerRpc(string cardId, ServerRpcParams rpcParams = default)
-    {
-        ulong senderClientId = rpcParams.Receive.SenderClientId;
-
-        var card = FindObjectOfType<DeckManagerObject>().GetCardById(cardId);
-        if (card == null)
-        {
-            Debug.LogWarning("Kart bulunamadı: " + cardId);
-            return;
-        }
-
-        Vector3 spawnPos = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId
-            ? playerSpawnPoint.position
-            : enemySpawnPoint.position;
-
-        GameObject obj = Instantiate(characterPrefab, spawnPos, Quaternion.identity);
-        var ch = obj.GetComponent<Character>();
-        ch.Setup(card);
-
-        obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(senderClientId);
-        allCharacters.Add(ch);
-    }
+    #endregion
 }
