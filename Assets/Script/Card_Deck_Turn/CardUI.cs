@@ -13,6 +13,7 @@ public class CardUI : MonoBehaviour
     public TMP_Text dexText;
     public Image characterImage;
     public Button detailButton;
+    public Button selectButton;
 
     [Header("Battle Durumu")]
     public bool isInBattle = false;
@@ -21,14 +22,22 @@ public class CardUI : MonoBehaviour
 
     void Start()
     {
+        // Detay butonu ayarı
         if (detailButton != null)
         {
             detailButton.onClick.RemoveAllListeners();
             detailButton.onClick.AddListener(OnCardClicked);
             detailButton.gameObject.SetActive(!isInBattle);
         }
-    }
 
+        // Seç butonu ayarı
+        if (selectButton != null)
+        {
+            selectButton.onClick.RemoveAllListeners();
+            selectButton.onClick.AddListener(OnSelectClicked);
+            selectButton.gameObject.SetActive(!isInBattle); // Savaşta görünmesin
+        }
+    }
 
     public void SetCardData(CardData data)
     {
@@ -44,9 +53,11 @@ public class CardUI : MonoBehaviour
         if (characterImage != null)
             characterImage.sprite = data.characterSprite;
 
-        // Detay butonu durumu tekrar kontrol
         if (detailButton != null)
             detailButton.gameObject.SetActive(!isInBattle);
+
+        if (selectButton != null)
+            selectButton.gameObject.SetActive(!isInBattle);
     }
 
     public void OnCardClicked()
@@ -54,6 +65,14 @@ public class CardUI : MonoBehaviour
         if (!isInBattle)
         {
             CardDetailPanel.Instance?.ShowCardDetails(cardData);
+        }
+    }
+
+    public void OnSelectClicked()
+    {
+        if (!isInBattle)
+        {
+            DeckSelectPopup.Instance?.ShowDeckChoice(this.cardData);
         }
     }
 }
