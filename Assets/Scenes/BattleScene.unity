@@ -360,6 +360,28 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3585839015924573742, guid: c2909b3adaf8967439dd3be3cf3227f1, type: 3}
   m_PrefabInstance: {fileID: 315425300}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &315425302 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6987711290418316106, guid: c2909b3adaf8967439dd3be3cf3227f1, type: 3}
+  m_PrefabInstance: {fileID: 315425300}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &315425303 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8867681907738207196, guid: c2909b3adaf8967439dd3be3cf3227f1, type: 3}
+  m_PrefabInstance: {fileID: 315425300}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &347803083
 GameObject:
   m_ObjectHideFlags: 0
@@ -475,7 +497,7 @@ GameObject:
   - component: {fileID: 700153994}
   - component: {fileID: 700153997}
   - component: {fileID: 700153996}
-  - component: {fileID: 700153995}
+  - component: {fileID: 700153998}
   m_Layer: 5
   m_Name: PlayerField
   m_TagString: Untagged
@@ -504,32 +526,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -839.20276}
   m_SizeDelta: {x: 0, y: -1678.4055}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &700153995
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 700153993}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_Spacing: 0
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!114 &700153996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -568,6 +564,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 700153993}
   m_CullTransparentMesh: 1
+--- !u!114 &700153998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700153993}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 100}
+  m_Spacing: {x: 0, y: 0}
+  m_Constraint: 0
+  m_ConstraintCount: 2
 --- !u!1 &745593243
 GameObject:
   m_ObjectHideFlags: 0
@@ -647,6 +667,7 @@ GameObject:
   - component: {fileID: 837560984}
   - component: {fileID: 837560986}
   - component: {fileID: 837560985}
+  - component: {fileID: 837560987}
   m_Layer: 5
   m_Name: EnemyField
   m_TagString: Untagged
@@ -712,6 +733,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 837560983}
   m_CullTransparentMesh: 1
+--- !u!114 &837560987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 837560983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 100}
+  m_Spacing: {x: 20, y: 20}
+  m_Constraint: 0
+  m_ConstraintCount: 2
 --- !u!1 &849145178
 GameObject:
   m_ObjectHideFlags: 0
@@ -746,7 +791,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 564, y: 947}
+  m_AnchoredPosition: {x: 413, y: 669}
   m_SizeDelta: {x: 353.1596, y: 123.7435}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &849145180
@@ -846,6 +891,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 849145178}
   m_CullTransparentMesh: 1
+--- !u!1 &881698330
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 881698332}
+  - component: {fileID: 881698331}
+  m_Layer: 0
+  m_Name: StartBattleManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &881698331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 881698330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b16daebe3eddef54584f2d5e06391d6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  selectedMatchCards: []
+  enemyMatchCards: []
+--- !u!4 &881698332
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 881698330}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 577.9847, y: 1319.2443, z: 8.821321}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1074450068
 GameObject:
   m_ObjectHideFlags: 0
@@ -875,6 +966,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 588b8e74cc94e6e4393438e4633af9cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerSpawner: {fileID: 2035525031}
+  enemySpawner: {fileID: 1635486953}
+  cardSlotPrefab: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
 --- !u!4 &1074450070
 Transform:
   m_ObjectHideFlags: 0
@@ -1054,10 +1148,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 837560984}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 161.58775, y: -50}
-  m_SizeDelta: {x: 323.1755, y: 100}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1635486954
 MonoBehaviour:
@@ -1077,7 +1171,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 0
+  m_Spacing: 10
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -1119,7 +1213,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 344.4977, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2035525032
 MonoBehaviour:
@@ -1130,7 +1224,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2035525030}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
@@ -1139,12 +1233,14 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_StartCorner: 0
-  m_StartAxis: 0
-  m_CellSize: {x: 100, y: 100}
-  m_Spacing: {x: 0, y: 0}
-  m_Constraint: 0
-  m_ConstraintCount: 2
+  m_Spacing: 10
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1001 &162187513506816779
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1160,11 +1256,11 @@ PrefabInstance:
     - target: {fileID: 5755295617801394939, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: skillButton
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 315425303}
     - target: {fileID: 5755295617801394939, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: attackButton
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 315425302}
     - target: {fileID: 5755295617801394939, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: enemySpawnPoint
       value: 
@@ -1295,3 +1391,4 @@ SceneRoots:
   - {fileID: 227641168}
   - {fileID: 1074450070}
   - {fileID: 1627371658}
+  - {fileID: 881698332}

@@ -17,7 +17,7 @@ public class CardData
     public Sprite characterSprite;
 
     // 👇 Detay paneli için gereken alanlar (bunlar eksikmiş)
-    
+
     public string cardClass;
     public string race;
     public string combination;
@@ -25,8 +25,8 @@ public class CardData
     public string combo;
     public string story;
     public string className;
-   
-    
+
+
 
 
 
@@ -46,4 +46,32 @@ public class CardData
         this.skillCooldownMax = skillCooldownMax;
         this.characterSprite = characterSprite;
     }
+
+    public CardData Clone()
+    {
+        return new CardData(
+            id,
+            cardName,
+            baseHP,
+            baseDamage,
+            rarity,
+            ability,
+            passive,
+            level,
+            xp,
+            skillCooldownMax,
+            characterSprite
+        )
+        {
+            dex = this.dex,
+            className = this.className,
+            race = this.race,
+            combination = this.combination,
+            story = this.story,
+            combo = this.combo
+        };
+    }
+
+
+
 }

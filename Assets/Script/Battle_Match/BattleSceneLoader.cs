@@ -1,26 +1,42 @@
-﻿using System.Collections;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 
 public class BattleSceneLoader : MonoBehaviour
 {
+    public Transform playerSpawner;
+    public Transform enemySpawner;
+    public GameObject cardSlotPrefab;
+
     void Start()
     {
-        StartCoroutine(DelayedSpawn());
+        SpawnPlayerCards();
+        SpawnEnemyCards();
     }
 
-    IEnumerator DelayedSpawn()
+    void SpawnPlayerCards()
     {
-        // Sahne otursun diye biraz bekle
-        yield return new WaitForSeconds(0.5f);
+        foreach (var card in StartBattleManager.Instance.selectedMatchCards)
+        {
+            GameObject cardGO = Instantiate(cardSlotPrefab, playerSpawner);
+            CardUI ui = cardGO.GetComponent<CardUI>();
+            if (ui != null)
+            {
+                ui.SetCardData(card);
+            }
+        }
+        Debug.Log("✅ Oyuncu kartları sahneye basıldı");
+    }
 
-        if (StartBattleManager.Instance != null && StartBattleManager.Instance.selectedMatchCards.Count > 0)
+    void SpawnEnemyCards()
+    {
+        foreach (var card in StartBattleManager.Instance.enemyMatchCards)
         {
-            BattleManager.Instance.SpawnPlayerCards(StartBattleManager.Instance.selectedMatchCards);
+            GameObject cardGO = Instantiate(cardSlotPrefab, enemySpawner);
+            CardUI ui = cardGO.GetComponent<CardUI>();
+            if (ui != null)
+            {
+                ui.SetCardData(card);
+            }
         }
-        else
-        {
-            Debug.LogError("❌ Savaşa ait kartlar bulunamadı.");
-        }
+        Debug.Log("✅ Düşman kartları sahneye basıldı");
     }
 }
