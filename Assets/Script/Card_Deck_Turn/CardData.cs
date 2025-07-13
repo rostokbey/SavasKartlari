@@ -64,14 +64,13 @@ public class CardData
         )
         {
             dex = this.dex,
-            className = this.className,
+            cardClass = this.cardClass,
             race = this.race,
             combination = this.combination,
+            lore = this.lore,
+            combo = this.combo,
             story = this.story,
-            combo = this.combo
+            className = this.className
         };
     }
-
-
-
 }

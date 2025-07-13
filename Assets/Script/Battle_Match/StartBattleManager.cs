@@ -6,15 +6,15 @@ public class StartBattleManager : MonoBehaviour
 {
     public static StartBattleManager Instance;
 
-    public List<CardData> selectedMatchCards = new();  // Oyuncunun seçtiği kartlar
-    public List<CardData> enemyMatchCards = new();     // Düşmanın kartları
+    public List<CardData> selectedMatchCards = new();  // Oyuncu kartları
+    public List<CardData> enemyMatchCards = new();     // Düşman kartları
 
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);  // Sahne değişiminde silinmesin
+            DontDestroyOnLoad(gameObject); // Sahne geçişlerinde korunur
         }
         else
         {
@@ -24,7 +24,6 @@ public class StartBattleManager : MonoBehaviour
 
     public void StartBattle()
     {
-        // DeckManagerObject'ten seçilen kartları al
         DeckManagerObject deckManager = FindObjectOfType<DeckManagerObject>();
 
         if (deckManager == null)
@@ -39,24 +38,22 @@ public class StartBattleManager : MonoBehaviour
             return;
         }
 
+        // Oyuncu kartlarını kaydet
         selectedMatchCards = new List<CardData>(deckManager.currentMatchDeck);
-
         Debug.Log($"✅ StartBattleManager: {selectedMatchCards.Count} oyuncu kartı yüklendi.");
 
-        // Geçici düşman kartları üret (ileride eşleşen rakipten gelecek)
-        if (enemyMatchCards.Count == 0)
+        // Düşman kartları oluştur
+        enemyMatchCards.Clear();
+        foreach (CardData card in selectedMatchCards)
         {
-            foreach (CardData card in selectedMatchCards)
-            {
-                CardData clone = card.Clone(); // Clone metodu olmalı (deep copy)
-                clone.cardName += "_Enemy";
-                enemyMatchCards.Add(clone);
-            }
-
-            Debug.Log($"🟥 StartBattleManager: {enemyMatchCards.Count} düşman kartı üretildi.");
+            CardData clone = card.Clone(); // Clone fonksiyonu tanımlı olmalı
+            clone.cardName += "_Enemy";
+            enemyMatchCards.Add(clone);
         }
 
-        // Savaş sahnesine geç
+        Debug.Log($"🟥 StartBattleManager: {enemyMatchCards.Count} düşman kartı oluşturuldu.");
+
+        // Battle sahnesine geçiş
         SceneManager.LoadScene("BattleScene");
     }
 }

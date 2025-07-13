@@ -1253,6 +1253,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BattleManagerObject
       objectReference: {fileID: 0}
+    - target: {fileID: 4441657421903597550, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5755295617801394939, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: skillButton
       value: 

@@ -43,10 +43,31 @@ public class BattleManager : NetworkBehaviour
     void Start()
     {
         if (!IsServer) return;
-        SpawnEnemyCards();
+
+        // StartBattleManager'dan kartları al
+        var playerCards = StartBattleManager.Instance?.selectedMatchCards;
+        var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
+
+        if (playerCards == null || enemyCards == null)
+        {
+            Debug.LogError("❌ BattleManager: Kartlar alınamadı.");
+            return;
+        }
+
+        Debug.Log($"🟩 Oyuncu kartları sayısı: {playerCards.Count}");
+        Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
+
+        // UI'da göster
+        SpawnPlayerCards(playerCards);
+        ShowEnemyDeck(enemyCards);
+
+        // Karakterleri oluştur
+        SpawnCharacters(playerCards, enemyCards);
+
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
     }
+
 
     #region Düşman Kartlarını Oluşturma
 
