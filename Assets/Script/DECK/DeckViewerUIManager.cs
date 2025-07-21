@@ -10,6 +10,13 @@ public class DeckViewerUIManager : MonoBehaviour
     public GameObject cardUIPrefab;    // Her kart için UI (CardUI prefabý olabilir)
     public DeckManagerObject deckManager;
 
+
+    void Start()
+    {
+        if (deckManager == null)
+            deckManager = FindObjectOfType<DeckManagerObject>();
+    }
+
     public void ShowAllDecks()
     {
         ClearDeckViews();
@@ -34,7 +41,7 @@ public class DeckViewerUIManager : MonoBehaviour
             foreach (var card in allDecks[i])
             {
                 GameObject cardUI = Instantiate(cardUIPrefab, content);
-                cardUI.GetComponent<CardUI>().SetCardData(card);
+                cardUI.GetComponent<CardUI>().SetCardData(card, false);
             }
         }
     }

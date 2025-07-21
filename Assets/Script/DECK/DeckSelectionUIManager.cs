@@ -43,7 +43,7 @@ public class DeckSelectionUIManager : MonoBehaviour
             CardUI cardUI = cardGO.GetComponent<CardUI>();
             if (cardUI != null)
             {
-                cardUI.SetCardData(card);
+                cardUI.SetCardData(card, false);
             }
         }
     }

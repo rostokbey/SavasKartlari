@@ -39,7 +39,7 @@ public class CardUI : MonoBehaviour
         }
     }
 
-    public void SetCardData(CardData data)
+    public void SetCardData(CardData data, bool showButtons = true)
     {
         cardData = data;
 
@@ -53,12 +53,15 @@ public class CardUI : MonoBehaviour
         if (characterImage != null)
             characterImage.sprite = data.characterSprite;
 
+        // Butonları sadece showButtons == true ise göster
         if (detailButton != null)
-            detailButton.gameObject.SetActive(!isInBattle);
-
+            detailButton.gameObject.SetActive(showButtons);
         if (selectButton != null)
-            selectButton.gameObject.SetActive(!isInBattle);
+            selectButton.gameObject.SetActive(showButtons);
     }
+
+
+
 
     public void OnCardClicked()
     {

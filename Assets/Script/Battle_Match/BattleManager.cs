@@ -111,7 +111,7 @@ public class BattleManager : NetworkBehaviour
             go.transform.SetParent(playerGridPositions[i]);
             CardUI ui = go.GetComponent<CardUI>();
             if (ui != null)
-                ui.SetCardData(cardData);
+                ui.SetCardData(cardData, false);
         }
     }
 
@@ -311,7 +311,8 @@ public class BattleManager : NetworkBehaviour
 
             CardUI ui = slot.GetComponent<CardUI>();
             if (ui != null)
-                ui.SetCardData(card);
+                ui.SetCardData(card, false); // savaş sahnesi → detay butonu gizlensin
+
         }
     }
 
