@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
-using Unity.Collections;
+
 
 public class BattleManager : NetworkBehaviour
 {
@@ -92,32 +93,45 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
+        // Oyuncu
         for (int i = 0; i < playerCards.Count && i < playerGridPositions.Length; i++)
         {
-            var prefab = playerCards[i].characterPrefab3D != null ? playerCards[i].characterPrefab3D : characterPrefab;
-            GameObject obj = Instantiate(prefab, playerGridPositions[i].position, Quaternion.identity);
-            obj.transform.localScale = Vector3.one;
+            var card = playerCards[i];
+            var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
-            Character ch = obj.GetComponent<Character>();
-            ch.Setup(playerCards[i]);
+            var obj = Instantiate(prefabToUse, playerGridPositions[i].position, Quaternion.identity);
+            obj.transform.SetParent(playerGridPositions[i], worldPositionStays: false);
+
+            var ch = obj.GetComponent<Character>();
+            ch.Setup(card);
             allCharacters.Add(ch);
-            obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(NetworkManager.Singleton.ConnectedClientsList[0].ClientId);
+
+            obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(
+                NetworkManager.Singleton.ConnectedClientsList[0].ClientId
+            );
         }
 
+        // Düşman
         for (int i = 0; i < enemyCards.Count && i < enemyGridPositions.Length; i++)
         {
-            var prefab = enemyCards[i].characterPrefab3D != null ? enemyCards[i].characterPrefab3D : characterPrefab;
-            GameObject obj = Instantiate(prefab, enemyGridPositions[i].position, Quaternion.identity);
-            obj.transform.localScale = Vector3.one;
+            var card = enemyCards[i];
+            var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
-            Character ch = obj.GetComponent<Character>();
-            ch.Setup(enemyCards[i]);
+            var obj = Instantiate(prefabToUse, enemyGridPositions[i].position, Quaternion.identity);
+            obj.transform.SetParent(enemyGridPositions[i], worldPositionStays: false);
+
+            var ch = obj.GetComponent<Character>();
+            ch.Setup(card);
             allCharacters.Add(ch);
-            obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(NetworkManager.Singleton.ConnectedClientsList[1].ClientId);
+
+            obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(
+                NetworkManager.Singleton.ConnectedClientsList[1].ClientId
+            );
         }
 
         AssignTurnToClient(currentTurnClientId);
     }
+
 
     #endregion
 
@@ -208,13 +222,17 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        var prefab = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
+        // ✅ Kullanılacak prefab'ı seç
+        GameObject prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
+        // ✅ Spawn pozisyonunu seç (Tek tanım, tekrar yok)
         Vector3 spawnPos = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId
             ? playerSpawnPoint.position
             : enemySpawnPoint.position;
 
-        GameObject obj = Instantiate(prefab, spawnPos, Quaternion.identity);
+        // ✅ Instantiate et
+        GameObject obj = Instantiate(prefabToUse, spawnPos, Quaternion.identity);
+
         var ch = obj.GetComponent<Character>();
         ch.Setup(card);
 
@@ -223,6 +241,7 @@ public class BattleManager : NetworkBehaviour
     }
 
     #endregion
+
 
     #region Victory
 

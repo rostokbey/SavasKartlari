@@ -40,14 +40,16 @@ public class QRDataManager : MonoBehaviour
         string ability = data.ContainsKey("ABILITY") ? data["ABILITY"] : "None";
         string passive = data.ContainsKey("PASSIVE") ? data["PASSIVE"] : "None";
         string rarity = data.ContainsKey("RARITY") ? data["RARITY"] : "Yaygın";
+        string prefabPath = data.ContainsKey("PREFAB") ? data["PREFAB"] : ""; // ✅ Yeni eklendi
 
+        // UI güncelle
         nameText.text = name.Replace("_", " ");
         hpText.text = "HP: " + hp;
         strText.text = "STR: " + str;
         abilityText.text = "Ability: " + ability;
         passiveText.text = "Passive: " + passive;
 
-        // ✅ Dinamik Sprite Yükleme
+        // ✅ Sprite yükle
         Sprite loadedSprite = Resources.Load<Sprite>("Characters/" + name);
         if (loadedSprite != null)
         {
@@ -60,6 +62,22 @@ public class QRDataManager : MonoBehaviour
             characterImage.sprite = defaultSprite;
         }
 
+        // ✅ Prefab yükle
+        GameObject loadedPrefab = Resources.Load<GameObject>("Prefabs3D/" + name);
+        if (!string.IsNullOrEmpty(prefabPath))
+        {
+            loadedPrefab = Resources.Load<GameObject>(prefabPath);
+            if (loadedPrefab != null)
+            {
+                Debug.Log("🧩 Prefab yüklendi: " + prefabPath);
+            }
+            else
+            {
+                Debug.LogWarning("❌ Prefab yüklenemedi: " + prefabPath);
+            }
+        }
+
+        // ✅ CardData oluştur
         CardData card = new CardData(
             id: id,
             cardName: name,
@@ -71,9 +89,13 @@ public class QRDataManager : MonoBehaviour
             level: 1,
             xp: 0,
             skillCooldownMax: 3,
-            characterSprite: characterImage.sprite
+            characterSprite: characterImage.sprite,
+            characterPrefab3D: loadedPrefab
         );
 
+        card.characterPrefab3D = loadedPrefab; // ✅ Prefab atandı
+
+        // ✅ Envantere ekle
         FindObjectOfType<PlayerInventory>()?.AddCard(card);
         FindObjectOfType<DeckManagerObject>()?.fullDeck.Add(card);
     }
