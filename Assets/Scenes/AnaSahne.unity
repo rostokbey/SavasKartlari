@@ -1245,81 +1245,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 172506682}
   m_CullTransparentMesh: 1
---- !u!1 &173891394
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 173891395}
-  - component: {fileID: 173891397}
-  - component: {fileID: 173891396}
-  m_Layer: 5
-  m_Name: DeckViewPanel
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &173891395
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 173891394}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1679907731}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 142}
-  m_SizeDelta: {x: 0, y: -284}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &173891396
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 173891394}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &173891397
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 173891394}
-  m_CullTransparentMesh: 1
 --- !u!1 &188821840
 GameObject:
   m_ObjectHideFlags: 0
@@ -1883,9 +1808,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 794599926}
-        m_TargetAssemblyTypeName: DeckSelectionUIManager, Assembly-CSharp
-        m_MethodName: DisplayDeckOptions
+      - m_Target: {fileID: 1534535565}
+        m_TargetAssemblyTypeName: DeckViewerUIManager, Assembly-CSharp
+        m_MethodName: ShowAllDecks
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7224,13 +7149,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1384302447}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 939109479}
-  m_Father: {fileID: 1783468296}
+  m_Father: {fileID: 1679907731}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -7250,7 +7175,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -7936,8 +7861,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64735a132297d0448b8780b7c443d45d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  deckPanelPrefab: {fileID: 595159792599272145, guid: c7ed6f20b5db4be47936831afd4d598a, type: 3}
+  deckViewPanel: {fileID: 1384302447}
   decksParent: {fileID: 1682284717}
+  deckPanelPrefab: {fileID: 595159792599272145, guid: c7ed6f20b5db4be47936831afd4d598a, type: 3}
   cardUIPrefab: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
   deckManager: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
 --- !u!4 &1534535566
@@ -9075,6 +9001,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1384302448}
   - {fileID: 1491373254}
   - {fileID: 1679873802}
   - {fileID: 188821841}
@@ -9082,7 +9009,6 @@ RectTransform:
   - {fileID: 2028351566}
   - {fileID: 451477900}
   - {fileID: 264028580}
-  - {fileID: 173891395}
   m_Father: {fileID: 1783468296}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -9588,7 +9514,6 @@ RectTransform:
   - {fileID: 2071291847}
   - {fileID: 905478288}
   - {fileID: 1326407247}
-  - {fileID: 1384302448}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
