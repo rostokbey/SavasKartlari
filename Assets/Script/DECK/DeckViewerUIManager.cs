@@ -6,8 +6,8 @@ public class DeckViewerUIManager : MonoBehaviour
 {
     [Header("UI")]
     public GameObject deckViewPanel;     // Gösterilecek ana panel
-    public Transform decksParent;        // ScrollView/Viewport/Content
-    public GameObject deckPanelPrefab;   // İçinde: DeckTitle (TMP) + Content (Grid+Fitter)
+    public Transform decksParent;        // ScrollView/Viewport/DecksParent
+    public GameObject deckPanelPrefab;   // İçinde: DeckTitle + Content (Grid+Fitter)
     public GameObject cardImagePrefab;   // (opsiyonel) Sadece Image içeren prefab
 
     private DeckManagerObject deckManager;
@@ -18,11 +18,9 @@ public class DeckViewerUIManager : MonoBehaviour
     }
 
     public void ShowAllDecks()
-
     {
         Debug.Log($"[CHECK] characterSprites={deckManager.characterSprites.Count}");
 
-        // Paneli aç
         if (deckViewPanel != null && !deckViewPanel.activeSelf)
             deckViewPanel.SetActive(true);
 
@@ -56,41 +54,38 @@ public class DeckViewerUIManager : MonoBehaviour
                 if (card == null) continue;
                 Debug.Log($"[CARD] {card.cardName} sprite={(card.characterSprite ? card.characterSprite.name : "NULL")}");
 
-
-                // Sprite yoksa ve kart ismi verilmişse, sprite'ı bulmaya çalış
                 if (card.characterSprite == null && !string.IsNullOrEmpty(card.cardName))
                 {
                     card.characterSprite = deckManager.GetSpriteByName(card.cardName);
-                    if (card.characterSprite == null)
-                    {
-                        Debug.LogWarning($"Sprite bulunamadı: {card.cardName}");
-                        continue;
-                    }
+                    if (card.characterSprite == null) { Debug.LogWarning($"Sprite bulunamadı: {card.cardName}"); continue; }
                 }
 
-                // Sprite hala boşsa bu kartı atla
+                // Sprite hala boşsa atla
                 if (card.characterSprite == null) continue;
 
-                GameObject go;
-                if (cardImagePrefab != null)
-                    go = Instantiate(cardImagePrefab, content, false);
-                else
-                    go = new GameObject($"IMG_{card.cardName}", typeof(RectTransform), typeof(Image));
+                GameObject go = (cardImagePrefab != null)
+                    ? Instantiate(cardImagePrefab, content, false)
+                    : new GameObject($"IMG_{card.cardName}", typeof(RectTransform), typeof(Image));
 
-                var img = go.GetComponent<Image>();
-                if (img == null) img = go.AddComponent<Image>();
-
+                var img = go.GetComponent<Image>() ?? go.AddComponent<Image>();
                 img.sprite = card.characterSprite;
                 img.preserveAspect = true;
                 img.color = Color.white;
 
-                // Grid hücren 260x360 ise (gerekirse değiştir)
                 var rt = go.GetComponent<RectTransform>();
-                if (rt) rt.sizeDelta = new Vector2(260, 360);
+                if (rt) rt.sizeDelta = new Vector2(260, 360); // Grid hücrene göre
+            }
+
+            // 🔧 İçerik dolduktan sonra: layout tazele + kaç çocuk var logla
+            var cRect = content as RectTransform;
+            if (cRect != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(cRect);
+                Debug.Log($"[UI] {panel.name} content childCount={cRect.childCount}");
             }
         }
 
-        // Layout tazele
+        // Parent tazele
         var parentRect = decksParent as RectTransform;
         if (parentRect) LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
     }

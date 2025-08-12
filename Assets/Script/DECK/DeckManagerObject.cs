@@ -3,28 +3,28 @@ using UnityEngine;
 
 public class DeckManagerObject : MonoBehaviour
 {
+    // ------------ Singleton ------------
     public static DeckManagerObject Instance;
-
     [Header("Deste Ayarları")]
     public int deckMaxSize = 2; // İstersen 25 yap
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
+    private string NormalizeName(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        return s.Replace("_", " ").Trim().ToLowerInvariant();
+    }
 
-
-    // Veriler
+    // ------------ Veriler ------------
     public List<CardData> fullDeck = new();
     public List<CardData> currentMatchDeck = new();
-    public List<CardData> matchDeck = new();
+    public List<CardData> matchDeck = new();  // kullanıyorsan dursun
     public List<CardData> deck1 = new();
     public List<CardData> deck2 = new();
     public List<CardData> deck3 = new();
@@ -35,19 +35,26 @@ public class DeckManagerObject : MonoBehaviour
     public class CharacterSprite { public string characterName; public Sprite sprite; }
     public List<CharacterSprite> characterSprites = new();
 
-    // Yardımcılar
+    // ------------ Yardımcılar ------------
+    // İsim normalize + önce Inspector listesinden, yoksa Resources/Characters/... dene
     public Sprite GetSpriteByName(string name)
     {
         if (string.IsNullOrEmpty(name)) return null;
 
-        // 1) Inspector listesinden ara
-        string Norm(string s) => s.Replace("_", " ").Trim().ToLowerInvariant();
-        var m = characterSprites.Find(c => Norm(c.characterName) == Norm(name));
-        if (m != null && m.sprite != null) return m.sprite;
+        // 1) Önce Inspector listesinden (isimleri normalize ederek)
+        string key = NormalizeName(name);
+        for (int i = 0; i < characterSprites.Count; i++)
+        {
+            var cs = characterSprites[i];
+            if (cs != null && cs.sprite != null && NormalizeName(cs.characterName) == key)
+            {
+                Debug.Log("[SPRITE] Listeden bulundu: " + cs.characterName + " -> " + cs.sprite.name);
+                return cs.sprite;
+            }
+        }
 
-        // 2) Resources’tan dene (Assets/Resources/Cards/...)
-        // Denenecek isim varyasyonları
-        var tries = new[]
+        // 2) Resources/Characters altında dosyadan dene
+        string[] tries = new string[]
         {
         name,
         name.Replace("_"," "),
@@ -55,18 +62,23 @@ public class DeckManagerObject : MonoBehaviour
         name.ToLowerInvariant(),
         name.Replace("_"," ").ToLowerInvariant(),
         name.Replace(" ","_").ToLowerInvariant()
-    };
+        };
 
-        foreach (var t in tries)
+        for (int i = 0; i < tries.Length; i++)
         {
-            var sp = Resources.Load<Sprite>($"Characters/{t}");
-            if (sp != null) return sp;
+            string path = "Characters/" + tries[i]; // Assets/Resources/Characters/<dosyaAdı>.png
+            Debug.Log("[SPRITE LOAD] " + path);
+            Sprite sp = Resources.Load<Sprite>(path);
+            if (sp != null)
+            {
+                Debug.Log("[SPRITE OK] " + sp.name);
+                return sp;
+            }
         }
 
-        Debug.LogWarning($"[Sprite] Bulunamadı: {name}");
+        Debug.LogWarning("[SPRITE MISS] " + name);
         return null;
     }
-
 
 
     public CardData GetCardById(string id)
@@ -85,52 +97,38 @@ public class DeckManagerObject : MonoBehaviour
         {
             var c = GetCardById(id);
             if (c != null) currentMatchDeck.Add(c);
-            else Debug.LogWarning($"❌ ID {id} ile kart bulunamadı.");
         }
         Debug.Log("🧩 Maç destesi hazır: " + currentMatchDeck.Count + " kart");
     }
 
-    // 0..4 index
-    public List<CardData> GetDeckByIndex(int idx)
+    // ------------ Deste işlemleri (0..4) ------------
+    public List<CardData> GetDeckByIndex(int idx) => idx switch
     {
-        return idx switch
-        {
-            0 => deck1,
-            1 => deck2,
-            2 => deck3,
-            3 => deck4,
-            4 => deck5,
-            _ => null
-        };
-    }
+        0 => deck1,
+        1 => deck2,
+        2 => deck3,
+        3 => deck4,
+        4 => deck5,
+        _ => null
+    };
 
-    public List<List<CardData>> GetAllDecks()
-    {
-        return new List<List<CardData>> { deck1, deck2, deck3, deck4, deck5 };
-    }
+    public List<List<CardData>> GetAllDecks() =>
+        new() { deck1, deck2, deck3, deck4, deck5 };
 
+    // Sprite’ı gerekirse oto-doldurur, limit kontrolü yapar
     public bool AddToDeck(int deckIndex, CardData card, int maxCount = -1)
     {
         var deck = GetDeckByIndex(deckIndex);
-        if (deck == null || card == null) { Debug.LogWarning("Geçersiz deckIndex ya da kart."); return false; }
+        if (deck == null || card == null) { Debug.LogWarning("Geçersiz deckIndex/kart."); return false; }
 
         int limit = (maxCount > 0) ? maxCount : deckMaxSize;
-        if (deck.Count >= limit)
-        {
-            Debug.LogWarning($"⚠ {deckIndex + 1}. deste dolu ({deck.Count}/{limit})");
-            return false;
-        }
+        if (deck.Count >= limit) { Debug.LogWarning($"⚠ {deckIndex + 1}. deste dolu ({deck.Count}/{limit})"); return false; }
 
-        // SPRITE OTO-DOLDUR
         if (card.characterSprite == null)
-        {
-            var sp = GetSpriteByName(card.cardName);
-            if (sp != null) { card.characterSprite = sp; Debug.Log($"[Deck] Sprite atandı: {card.cardName}"); }
-            else Debug.LogWarning($"[Deck] Sprite bulunamadı: {card.cardName}");
-        }
+            card.characterSprite = GetSpriteByName(card.cardName);
 
         deck.Add(card);
-        Debug.Log($"✅ {card.cardName} kartı {deckIndex + 1}. desteye eklendi. ({deck.Count}/{limit})");
+        Debug.Log($"✅ {card.cardName} -> {deckIndex + 1}. deste ({deck.Count}/{limit})");
         return true;
     }
 

@@ -1086,7 +1086,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4747,10 +4747,10 @@ RectTransform:
   - {fileID: 1347953769}
   m_Father: {fileID: 1384302448}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.0071105957}
-  m_SizeDelta: {x: 1170, y: 2239.3}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &939109480
 MonoBehaviour:
@@ -4795,7 +4795,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -7159,8 +7159,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 146.33423}
-  m_SizeDelta: {x: 0, y: -292.6685}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1384302449
 MonoBehaviour:
@@ -7863,7 +7863,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   deckViewPanel: {fileID: 1384302447}
   decksParent: {fileID: 1682284717}
-  deckPanelPrefab: {fileID: 970346133492753802, guid: c7ed6f20b5db4be47936831afd4d598a, type: 3}
+  deckPanelPrefab: {fileID: 5623127748195288792, guid: c7ed6f20b5db4be47936831afd4d598a, type: 3}
   cardImagePrefab: {fileID: 8427968370945687992, guid: 67a685affffc00543bc2d799c62e410a, type: 3}
 --- !u!4 &1534535566
 Transform:
@@ -9085,10 +9085,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 170191515}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 2409.0972}
+  m_AnchoredPosition: {x: 0, y: -0.00024414062}
+  m_SizeDelta: {x: 0, y: -93.549}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1682284718
 MonoBehaviour:
