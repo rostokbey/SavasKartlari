@@ -1,85 +1,102 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic;
-using UnityEngine.EventSystems;
 
 public class DeckViewerUIManager : MonoBehaviour
 {
-    [Header("UI Refs")]
-    public GameObject deckViewPanel;     // ❗ DeckViewPanel (kırmızı arka planlı panel)
-    public Transform decksParent;        // ❗ ScrollView/Viewport/Content
-    public GameObject deckPanelPrefab;   // ❗ İçinde “DeckTitle” (TMP_Text) ve “Content” (Transform) var
-    public GameObject cardUIPrefab;      // ❗ CardUI componentli prefab
+    [Header("UI")]
+    public GameObject deckViewPanel;     // Gösterilecek ana panel
+    public Transform decksParent;        // ScrollView/Viewport/Content
+    public GameObject deckPanelPrefab;   // İçinde: DeckTitle (TMP) + Content (Grid+Fitter)
+    public GameObject cardImagePrefab;   // (opsiyonel) Sadece Image içeren prefab
 
-    [Header("Data")]
-    public DeckManagerObject deckManager;
+    private DeckManagerObject deckManager;
+
+    private void Awake()
+    {
+        deckManager = DeckManagerObject.Instance ?? FindObjectOfType<DeckManagerObject>(true);
+    }
 
     public void ShowAllDecks()
+
     {
-        // 1) Paneli görünür yap
+        Debug.Log($"[CHECK] characterSprites={deckManager.characterSprites.Count}");
+
+        // Paneli aç
         if (deckViewPanel != null && !deckViewPanel.activeSelf)
             deckViewPanel.SetActive(true);
-
-        // 2) Güvenlik kontrolleri
-        if (deckManager == null)
-            deckManager = FindObjectOfType<DeckManagerObject>();
 
         if (deckManager == null) { Debug.LogError("❌ DeckManagerObject yok."); return; }
         if (decksParent == null) { Debug.LogError("❌ decksParent atanmadı."); return; }
         if (deckPanelPrefab == null) { Debug.LogError("❌ deckPanelPrefab atanmadı."); return; }
-        if (cardUIPrefab == null) { Debug.LogError("❌ cardUIPrefab atanmadı."); return; }
 
-        // 3) Temizle
-        foreach (Transform child in decksParent) Destroy(child.gameObject);
+        // Eski panelleri temizle
+        for (int i = decksParent.childCount - 1; i >= 0; i--)
+            Destroy(decksParent.GetChild(i).gameObject);
 
-        // 4) Tüm desteleri sırala
-        var allDecks = new List<List<CardData>> {
-            deckManager.deck1, deckManager.deck2, deckManager.deck3, deckManager.deck4, deckManager.deck5
-        };
-
-        for (int i = 0; i < allDecks.Count; i++)
+        // 0..4 desteleri sırayla bas
+        for (int deckIdx = 0; deckIdx < 5; deckIdx++)
         {
-            var deck = allDecks[i];
-            var deckPanel = Instantiate(deckPanelPrefab, decksParent);
-            deckPanel.name = $"Deck_{i + 1}";
+            var deck = deckManager.GetDeckByIndex(deckIdx);
+            if (deck == null) continue;
 
-            // Başlık
-            var titleTf = deckPanel.transform.Find("DeckTitle");
-            if (titleTf != null)
-            {
-                var title = titleTf.GetComponent<TMP_Text>();
-                if (title != null) title.text = $"Deste {i + 1}  ({deck.Count}/25)";
-            }
-            else
-            {
-                Debug.LogWarning($"⚠ DeckPanelPrefab içinde 'DeckTitle' bulunamadı. ({deckPanel.name})");
-            }
+            // Panel
+            var panel = Instantiate(deckPanelPrefab, decksParent, false);
+            panel.name = $"Deck_{deckIdx + 1}";
 
-            // İçerik alanı
-            var content = deckPanel.transform.Find("Content");
-            if (content == null)
-            {
-                Debug.LogError($"❌ DeckPanelPrefab içinde 'Content' bulunamadı. ({deckPanel.name})");
-                continue;
-            }
+            var title = panel.transform.Find("DeckTitle")?.GetComponent<TMP_Text>();
+            if (title) title.text = $"Deste {deckIdx + 1} ({deck.Count}/{deckManager.deckMaxSize})";
 
-            // Kartları bas
+            var content = panel.transform.Find("Content");
+            if (content == null) { Debug.LogError("DeckPanelPrefab içinde 'Content' yok."); continue; }
+
+            // Sadece kart görselleri
             foreach (var card in deck)
             {
-                var cardUIObj = Instantiate(cardUIPrefab, content);
-                var ui = cardUIObj.GetComponent<CardUI>();
-                if (ui != null) ui.SetCardData(card, false); // savaş butonları gizli
+                if (card == null) continue;
+                Debug.Log($"[CARD] {card.cardName} sprite={(card.characterSprite ? card.characterSprite.name : "NULL")}");
+
+
+                // Sprite yoksa ve kart ismi verilmişse, sprite'ı bulmaya çalış
+                if (card.characterSprite == null && !string.IsNullOrEmpty(card.cardName))
+                {
+                    card.characterSprite = deckManager.GetSpriteByName(card.cardName);
+                    if (card.characterSprite == null)
+                    {
+                        Debug.LogWarning($"Sprite bulunamadı: {card.cardName}");
+                        continue;
+                    }
+                }
+
+                // Sprite hala boşsa bu kartı atla
+                if (card.characterSprite == null) continue;
+
+                GameObject go;
+                if (cardImagePrefab != null)
+                    go = Instantiate(cardImagePrefab, content, false);
+                else
+                    go = new GameObject($"IMG_{card.cardName}", typeof(RectTransform), typeof(Image));
+
+                var img = go.GetComponent<Image>();
+                if (img == null) img = go.AddComponent<Image>();
+
+                img.sprite = card.characterSprite;
+                img.preserveAspect = true;
+                img.color = Color.white;
+
+                // Grid hücren 260x360 ise (gerekirse değiştir)
+                var rt = go.GetComponent<RectTransform>();
+                if (rt) rt.sizeDelta = new Vector2(260, 360);
             }
         }
 
-        // 5) Layout’u yenile (bazı cihazlarda gerekli)
+        // Layout tazele
         var parentRect = decksParent as RectTransform;
-        if (parentRect != null)
-        {
-            LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
-        }
+        if (parentRect) LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
+    }
 
-        Debug.Log("📜 Tüm desteler listelendi ve panel aktif.");
+    public void HideDecksPanel()
+    {
+        if (deckViewPanel != null) deckViewPanel.SetActive(false);
     }
 }

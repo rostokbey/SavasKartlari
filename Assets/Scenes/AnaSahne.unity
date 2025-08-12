@@ -7136,7 +7136,7 @@ GameObject:
   - component: {fileID: 1384302450}
   - component: {fileID: 1384302449}
   m_Layer: 5
-  m_Name: DeckViewerPanel
+  m_Name: DeckViewPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7863,9 +7863,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   deckViewPanel: {fileID: 1384302447}
   decksParent: {fileID: 1682284717}
-  deckPanelPrefab: {fileID: 595159792599272145, guid: c7ed6f20b5db4be47936831afd4d598a, type: 3}
-  cardUIPrefab: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
-  deckManager: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
+  deckPanelPrefab: {fileID: 970346133492753802, guid: c7ed6f20b5db4be47936831afd4d598a, type: 3}
+  cardImagePrefab: {fileID: 8427968370945687992, guid: 67a685affffc00543bc2d799c62e410a, type: 3}
 --- !u!4 &1534535566
 Transform:
   m_ObjectHideFlags: 0
@@ -9064,6 +9063,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1682284717}
   - component: {fileID: 1682284718}
+  - component: {fileID: 1682284719}
   m_Layer: 5
   m_Name: DecksParent
   m_TagString: Untagged
@@ -9116,6 +9116,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1682284719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682284716}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &1689572401
 GameObject:
   m_ObjectHideFlags: 0
@@ -11708,13 +11722,13 @@ SceneRoots:
   - {fileID: 34511173}
   - {fileID: 387014546}
   - {fileID: 2000783657}
-  - {fileID: 184886551905663594}
   - {fileID: 1657978900}
   - {fileID: 53727840}
-  - {fileID: 794599925}
   - {fileID: 1042065708}
   - {fileID: 986534264}
   - {fileID: 1493074854}
   - {fileID: 348044194}
+  - {fileID: 184886551905663594}
   - {fileID: 2098418388}
+  - {fileID: 794599925}
   - {fileID: 1534535566}

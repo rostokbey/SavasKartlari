@@ -7,18 +7,17 @@ public class DeckSelectPopup : MonoBehaviour
     public static DeckSelectPopup Instance;
 
     public GameObject popupPanel;
-    public Button[] deckButtons; // 5 buton olacak
+    public Button[] deckButtons; // 5 buton (0..4)
 
     private CardData pendingCard;
 
     void Awake()
     {
         Instance = this;
-
-        // Her butona dinleyici ekle
         for (int i = 0; i < deckButtons.Length; i++)
         {
-            int deckIndex = i;
+            int deckIndex = i; // 0-bazlı
+            deckButtons[i].onClick.RemoveAllListeners();
             deckButtons[i].onClick.AddListener(() => AddCardToDeck(deckIndex));
         }
     }
@@ -26,46 +25,20 @@ public class DeckSelectPopup : MonoBehaviour
     public void ShowDeckChoice(CardData card)
     {
         pendingCard = card;
-        popupPanel.SetActive(true);
+        if (popupPanel) popupPanel.SetActive(true);
     }
 
     void AddCardToDeck(int deckIndex)
     {
-        DeckManagerObject deckManager = FindObjectOfType<DeckManagerObject>();
+        var dm = DeckManagerObject.Instance ?? FindObjectOfType<DeckManagerObject>(true);
+        if (dm == null) { Debug.LogError("DeckManagerObject bulunamadı!"); if (popupPanel) popupPanel.SetActive(false); return; }
 
-        if (deckManager == null)
+        bool ok = dm.AddToDeck(deckIndex, pendingCard); // sprite oto-doldur + limit kontrol içeride
+        if (ok)
         {
-            Debug.LogError("DeckManagerObject bulunamadı!");
-            popupPanel.SetActive(false);
-            return;
+            Debug.Log($"✅ {pendingCard.cardName} -> {deckIndex + 1}. deste");
         }
-
-        List<CardData> selectedDeck = deckIndex switch
-        {
-            0 => deckManager.deck1,
-            1 => deckManager.deck2,
-            2 => deckManager.deck3,
-            3 => deckManager.deck4,
-            4 => deckManager.deck5,
-            _ => null
-        };
-
-        if (selectedDeck == null)
-        {
-            Debug.LogWarning("Geçersiz deste indexi.");
-            popupPanel.SetActive(false);
-            return;
-        }
-
-        if (selectedDeck.Count >= 25)
-        {
-            Debug.LogWarning("Bu desteye zaten 25 kart eklenmiş.");
-            popupPanel.SetActive(false);
-            return;
-        }
-
-        selectedDeck.Add(pendingCard);
-        Debug.Log($"✅ {pendingCard.cardName} kartı {deckIndex + 1}. desteye eklendi.");
-        popupPanel.SetActive(false);
+        // Başarılı/başarısız fark etmeksizin pop-up kapanıyor (istersen şartlı yap)
+        if (popupPanel) popupPanel.SetActive(false);
     }
 }
