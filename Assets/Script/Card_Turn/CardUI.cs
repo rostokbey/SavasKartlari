@@ -60,6 +60,19 @@ public class CardUI : MonoBehaviour
             selectButton.gameObject.SetActive(showButtons);
     }
 
+    public System.Action onClick;
+
+    public void SetInteractable(bool b)
+    {
+        var btn = GetComponent<UnityEngine.UI.Button>();
+        if (btn != null) btn.interactable = b;
+    }
+
+    // Button OnClick'ten bağlayacağız
+    public void OnButtonClick()
+    {
+        onClick?.Invoke();
+    }
 
 
 

@@ -11969,8 +11969,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
+      propertyPath: deckMaxSize
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
       propertyPath: deck1.Array.size
-      value: 0
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
+      propertyPath: fullDeck.Array.size
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

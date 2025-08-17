@@ -5,14 +5,13 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-
 public class BattleManager : NetworkBehaviour
 {
     public static BattleManager Instance;
 
     [Header("Kart Prefabları ve Konumları")]
-    public GameObject characterPrefab; // Varsayılan prefab
-    public GameObject cardPrefab; // CardUI prefabı
+    public GameObject characterPrefab; // Varsayılan prefab (CardData.characterPrefab3D yoksa)
+    public GameObject cardPrefab;      // Kart UI prefabı (elde/gösterimde)
     public Transform[] playerGridPositions;
     public Transform[] enemyGridPositions;
 
@@ -26,11 +25,15 @@ public class BattleManager : NetworkBehaviour
     public Transform enemyCardParent;
     public GameObject cardSlotPrefab;
 
+    // (Opsiyonel) UI'dan doğrudan başlatmak istersen bu butonu sahneden bağlayabilirsin
+    [Tooltip("İstersen sahneden bağla; bağlanmazsa da OnStartBattleButton() çağrılabilir.")]
+    public Button startBattleButton;
+
     [Header("Turn Yönetimi")]
     public ulong currentTurnClientId;
 
-    private List<Character> allCharacters = new();
-    private Dictionary<ulong, List<string>> playerSubmittedCardIds = new();
+    private readonly List<Character> allCharacters = new();
+    private readonly Dictionary<ulong, List<string>> playerSubmittedCardIds = new();
 
     private List<Character> turnOrder = new();
     private int currentIndex = 0;
@@ -43,6 +46,10 @@ public class BattleManager : NetworkBehaviour
 
     void Start()
     {
+        // UI buton bağlama (varsa)
+        if (startBattleButton != null)
+            startBattleButton.onClick.AddListener(OnStartBattleButton);
+
         if (!IsServer) return;
 
         var playerCards = StartBattleManager.Instance?.selectedMatchCards;
@@ -57,14 +64,51 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟩 Oyuncu kartları sayısı: {playerCards.Count}");
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
 
+        // Oyuncu tarafının kart UI'larını göster
         SpawnPlayerCards(playerCards);
+
+        // Düşman destesini UI'da göster (istersen boş bırakabilirsin)
         ShowEnemyDeck(enemyCards);
 
-        SpawnCharacters(playerCards, enemyCards);
+        // 3D karakterleri sahneye bas geçiçi kapattım testten sonra aç!!!!
+        //SpawnCharacters(playerCards, enemyCards);
 
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
+
+        var handUI = FindObjectOfType<HandUIManager>();
+        if (handUI != null)
+        {
+            var playerDeck = StartBattleManager.Instance.selectedMatchCards;
+            handUI.Init(playerDeck, cardPrefab);
+        }
+
     }
+
+    // ---------------------------------------------------------------------
+    #region UI'dan Savaş Başlatma (opsiyonel)
+
+    // UI'daki "SAVAŞ BAŞLAT" butonuna verebileceğin güvenli çağrı.
+    public void OnStartBattleButton()
+    {
+        var playerCards = StartBattleManager.Instance?.selectedMatchCards;
+        var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
+
+        if (playerCards == null || enemyCards == null)
+        {
+            Debug.LogWarning("StartBattle: Kart listeleri bulunamadı.");
+            return;
+        }
+
+        // Sunucu değilsek sunucu zaten Start'ta basacaktır; tek cihaz testinde de çalışsın:
+        if (IsServer)
+            SpawnCharacters(playerCards, enemyCards);
+
+        StartBattle();
+    }
+
+    #endregion
+    // ---------------------------------------------------------------------
 
     #region Oyuncu Kart UI
 
@@ -83,7 +127,8 @@ public class BattleManager : NetworkBehaviour
 
     #endregion
 
-    #region Karakter Spawn
+    // ---------------------------------------------------------------------
+    #region Karakter Spawn (3D hizalama iyileştirilmiş)
 
     public void SpawnCharacters(List<CardData> playerCards, List<CardData> enemyCards)
     {
@@ -93,47 +138,77 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Oyuncu
+        // ---- Oyuncu ----
         for (int i = 0; i < playerCards.Count && i < playerGridPositions.Length; i++)
         {
             var card = playerCards[i];
             var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
             var obj = Instantiate(prefabToUse, playerGridPositions[i].position, Quaternion.identity);
+
+            // >>> HİZALAMA (parent/pozisyon/rotasyon/ölçek)
             obj.transform.SetParent(playerGridPositions[i], worldPositionStays: false);
+            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localRotation = Quaternion.identity;
+            obj.transform.localScale = Vector3.one; // Gerekirse 1.1f/1.2f
 
             var ch = obj.GetComponent<Character>();
-            ch.Setup(card);
-            allCharacters.Add(ch);
+            if (ch != null)
+            {
+                ch.Setup(card);
+                allCharacters.Add(ch);
+            }
 
-            obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(
-                NetworkManager.Singleton.ConnectedClientsList[0].ClientId
-            );
+            var netObj = obj.GetComponent<NetworkObject>();
+            if (netObj != null)
+            {
+                ulong owner =
+                    NetworkManager.Singleton.ConnectedClientsList.Count > 0
+                    ? NetworkManager.Singleton.ConnectedClientsList[0].ClientId
+                    : NetworkManager.Singleton.LocalClientId;
+
+                netObj.SpawnWithOwnership(owner);
+            }
         }
 
-        // Düşman
+        // ---- Düşman ----
         for (int i = 0; i < enemyCards.Count && i < enemyGridPositions.Length; i++)
         {
             var card = enemyCards[i];
             var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
             var obj = Instantiate(prefabToUse, enemyGridPositions[i].position, Quaternion.identity);
+
+            // >>> HİZALAMA + bize baksın diye 180°
             obj.transform.SetParent(enemyGridPositions[i], worldPositionStays: false);
+            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            obj.transform.localScale = Vector3.one;
 
             var ch = obj.GetComponent<Character>();
-            ch.Setup(card);
-            allCharacters.Add(ch);
+            if (ch != null)
+            {
+                ch.Setup(card);
+                allCharacters.Add(ch);
+            }
 
-            obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(
-                NetworkManager.Singleton.ConnectedClientsList[1].ClientId
-            );
+            var netObj = obj.GetComponent<NetworkObject>();
+            if (netObj != null)
+            {
+                ulong enemyOwner =
+                    NetworkManager.Singleton.ConnectedClientsList.Count > 1
+                    ? NetworkManager.Singleton.ConnectedClientsList[1].ClientId
+                    : NetworkManager.Singleton.LocalClientId;
+
+                netObj.SpawnWithOwnership(enemyOwner);
+            }
         }
 
         AssignTurnToClient(currentTurnClientId);
     }
 
-
     #endregion
+    // ---------------------------------------------------------------------
 
     #region Turn Sistemi
 
@@ -155,6 +230,8 @@ public class BattleManager : NetworkBehaviour
 
     public void EndTurn()
     {
+        if (turnOrder == null || turnOrder.Count == 0) return;
+
         turnOrder[currentIndex].SetTurn(false);
         currentIndex = (currentIndex + 1) % turnOrder.Count;
         AssignTurn();
@@ -162,10 +239,12 @@ public class BattleManager : NetworkBehaviour
 
     void AssignTurn()
     {
+        if (turnOrder == null || turnOrder.Count == 0) return;
         turnOrder[currentIndex].SetTurn(true);
     }
 
     #endregion
+    // ---------------------------------------------------------------------
 
     #region RPC ve Kart Gönderme
 
@@ -225,7 +304,7 @@ public class BattleManager : NetworkBehaviour
         // ✅ Kullanılacak prefab'ı seç
         GameObject prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
-        // ✅ Spawn pozisyonunu seç (Tek tanım, tekrar yok)
+        // ✅ Spawn pozisyonunu seç
         Vector3 spawnPos = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId
             ? playerSpawnPoint.position
             : enemySpawnPoint.position;
@@ -233,15 +312,16 @@ public class BattleManager : NetworkBehaviour
         // ✅ Instantiate et
         GameObject obj = Instantiate(prefabToUse, spawnPos, Quaternion.identity);
 
+        // hizalama (spawn point child'ı değil; sahneye serbest)
         var ch = obj.GetComponent<Character>();
-        ch.Setup(card);
+        if (ch != null) ch.Setup(card);
 
         obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(senderClientId);
         allCharacters.Add(ch);
     }
 
     #endregion
-
+    // ---------------------------------------------------------------------
 
     #region Victory
 
@@ -279,11 +359,14 @@ public class BattleManager : NetworkBehaviour
     }
 
     #endregion
+    // ---------------------------------------------------------------------
 
     #region UI
 
     public void ShowEnemyDeck(List<CardData> enemyCards)
     {
+        if (enemyCardParent == null || cardSlotPrefab == null) return;
+
         foreach (Transform child in enemyCardParent)
             Destroy(child.gameObject);
 
