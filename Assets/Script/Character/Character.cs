@@ -9,8 +9,8 @@ public class Character : NetworkBehaviour
 
     public void Setup(CardData data)
     {
-        cardData = data;
-        hp = data.baseHP;
+        cardData = data ?? cardData;
+        hp = Mathf.Max(0, cardData != null ? cardData.baseHP : 0);
     }
 
     public void SetTurn(bool turn)
@@ -34,4 +34,10 @@ public class Character : NetworkBehaviour
             BattleManager.Instance.EndTurn();
         }
     }
+
+    public override void OnNetworkSpawn()
+    {
+        Debug.Log($"[CHAR] Spawn: {cardData?.cardName ?? "NULL"} owner={OwnerClientId}");
+    }
+
 }

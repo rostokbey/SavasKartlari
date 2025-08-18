@@ -46,14 +46,28 @@ public class BattleManager : NetworkBehaviour
 
     void Start()
     {
+
+        // TEST: Eğer ağ henüz başlamadıysa Host olarak başlat
+        if (NetworkManager.Singleton &&
+       !NetworkManager.Singleton.IsServer &&
+       !NetworkManager.Singleton.IsClient)
+        {
+            NetworkManager.Singleton.StartHost();
+            Debug.Log("[BM] Test: Host başladı (Editor/tek cihaz testi).");
+        }
+
+
         // UI buton bağlama (varsa)
         if (startBattleButton != null)
             startBattleButton.onClick.AddListener(OnStartBattleButton);
 
-        if (!IsServer) return;
+        //test sonrası sil !!!! 
+        //if (!IsServer) return;
 
         var playerCards = StartBattleManager.Instance?.selectedMatchCards;
         var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
+
+        Debug.Log($"[BM] Start: playerCards={playerCards?.Count}, enemyCards={enemyCards?.Count}");
 
         if (playerCards == null || enemyCards == null)
         {
@@ -67,11 +81,11 @@ public class BattleManager : NetworkBehaviour
         // Oyuncu tarafının kart UI'larını göster
         SpawnPlayerCards(playerCards);
 
-        // Düşman destesini UI'da göster (istersen boş bırakabilirsin)
+        // Düşman destesini UI'da göster ()
         ShowEnemyDeck(enemyCards);
 
-        // 3D karakterleri sahneye bas geçiçi kapattım testten sonra aç!!!!
-        //SpawnCharacters(playerCards, enemyCards);
+        // 3D karakterleri sahneye bas deneme satrı sonra sil!!!
+        SpawnCharacters(playerCards, enemyCards);
 
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
@@ -142,15 +156,29 @@ public class BattleManager : NetworkBehaviour
         for (int i = 0; i < playerCards.Count && i < playerGridPositions.Length; i++)
         {
             var card = playerCards[i];
+            var grid = playerGridPositions[i];
             var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
-            var obj = Instantiate(prefabToUse, playerGridPositions[i].position, Quaternion.identity);
+            Debug.Log($"[A] Oyuncu kartı spawn ediliyor -> {card.cardName}, " +
+                      $"Prefab: {(card.characterPrefab3D != null ? card.characterPrefab3D.name : "DefaultPrefab")}");
 
-            // >>> HİZALAMA (parent/pozisyon/rotasyon/ölçek)
-            obj.transform.SetParent(playerGridPositions[i], worldPositionStays: false);
+            var obj = Instantiate(prefabToUse, grid.position, grid.rotation);
+            var net = obj.GetComponent<NetworkObject>();
+
+            // 1) ÖNCE SPAWN
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+                net.Spawn();
+
+            // 2) SONRA PARENT
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+                net.TrySetParent(grid, false);
+            else
+                obj.transform.SetParent(grid, false);
+
+            // 3) HİZALAMA
             obj.transform.localPosition = Vector3.zero;
             obj.transform.localRotation = Quaternion.identity;
-            obj.transform.localScale = Vector3.one; // Gerekirse 1.1f/1.2f
+            obj.transform.localScale = Vector3.one;
 
             var ch = obj.GetComponent<Character>();
             if (ch != null)
@@ -158,29 +186,29 @@ public class BattleManager : NetworkBehaviour
                 ch.Setup(card);
                 allCharacters.Add(ch);
             }
-
-            var netObj = obj.GetComponent<NetworkObject>();
-            if (netObj != null)
-            {
-                ulong owner =
-                    NetworkManager.Singleton.ConnectedClientsList.Count > 0
-                    ? NetworkManager.Singleton.ConnectedClientsList[0].ClientId
-                    : NetworkManager.Singleton.LocalClientId;
-
-                netObj.SpawnWithOwnership(owner);
-            }
         }
 
         // ---- Düşman ----
         for (int i = 0; i < enemyCards.Count && i < enemyGridPositions.Length; i++)
         {
             var card = enemyCards[i];
+            var grid = enemyGridPositions[i];
             var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
-            var obj = Instantiate(prefabToUse, enemyGridPositions[i].position, Quaternion.identity);
+            Debug.Log($"[B] Düşman kartı spawn ediliyor -> {card.cardName}, " +
+                      $"Prefab: {(card.characterPrefab3D != null ? card.characterPrefab3D.name : "DefaultPrefab")}");
 
-            // >>> HİZALAMA + bize baksın diye 180°
-            obj.transform.SetParent(enemyGridPositions[i], worldPositionStays: false);
+            var obj = Instantiate(prefabToUse, grid.position, grid.rotation);
+            var net = obj.GetComponent<NetworkObject>();
+
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+                net.Spawn();
+
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+                net.TrySetParent(grid, false);
+            else
+                obj.transform.SetParent(grid, false);
+
             obj.transform.localPosition = Vector3.zero;
             obj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             obj.transform.localScale = Vector3.one;
@@ -191,21 +219,12 @@ public class BattleManager : NetworkBehaviour
                 ch.Setup(card);
                 allCharacters.Add(ch);
             }
-
-            var netObj = obj.GetComponent<NetworkObject>();
-            if (netObj != null)
-            {
-                ulong enemyOwner =
-                    NetworkManager.Singleton.ConnectedClientsList.Count > 1
-                    ? NetworkManager.Singleton.ConnectedClientsList[1].ClientId
-                    : NetworkManager.Singleton.LocalClientId;
-
-                netObj.SpawnWithOwnership(enemyOwner);
-            }
         }
 
         AssignTurnToClient(currentTurnClientId);
     }
+
+
 
     #endregion
     // ---------------------------------------------------------------------

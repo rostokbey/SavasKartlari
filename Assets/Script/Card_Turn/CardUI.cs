@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Xml.Linq;
 using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class CardUI : MonoBehaviour
@@ -59,6 +60,18 @@ public class CardUI : MonoBehaviour
         if (selectButton != null)
             selectButton.gameObject.SetActive(showButtons);
     }
+
+    public void SetBattleMode(bool on)
+    {
+        nameText.gameObject.SetActive(!on);
+        hpText.gameObject.SetActive(!on);
+        dexText.gameObject.SetActive(!on);
+       levelText.gameObject.SetActive(!on);
+        xpText.gameObject.SetActive(!on);
+        detailButton.gameObject.SetActive(!on);
+        // SelectButton açık kalsın (kartı oynamak için) ya da onu da kapatabilirsin
+    }
+
 
     public System.Action onClick;
 
