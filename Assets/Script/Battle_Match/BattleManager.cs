@@ -62,7 +62,7 @@ public class BattleManager : NetworkBehaviour
             startBattleButton.onClick.AddListener(OnStartBattleButton);
 
         //test sonrası sil !!!! 
-        //if (!IsServer) return;
+        if (!IsServer) return;
 
         var playerCards = StartBattleManager.Instance?.selectedMatchCards;
         var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
@@ -79,10 +79,10 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
 
         // Oyuncu tarafının kart UI'larını göster
-        SpawnPlayerCards(playerCards);
+        //SpawnPlayerCards(playerCards);
 
         // Düşman destesini UI'da göster ()
-        ShowEnemyDeck(enemyCards);
+        //ShowEnemyDeck(enemyCards);
 
         // 3D karakterleri sahneye bas deneme satrı sonra sil!!!
         SpawnCharacters(playerCards, enemyCards);
@@ -90,12 +90,12 @@ public class BattleManager : NetworkBehaviour
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
 
-        var handUI = FindObjectOfType<HandUIManager>();
-        if (handUI != null)
-        {
-            var playerDeck = StartBattleManager.Instance.selectedMatchCards;
-            handUI.Init(playerDeck, cardPrefab);
-        }
+        //var handUI = FindObjectOfType<HandUIManager>();
+        //if (handUI != null)
+        //{
+        //    var playerDeck = StartBattleManager.Instance.selectedMatchCards;
+         //   handUI.Init(playerDeck, cardPrefab);
+       // }
 
     }
 
@@ -126,24 +126,28 @@ public class BattleManager : NetworkBehaviour
 
     #region Oyuncu Kart UI
 
+    // ------------------------------
+    // Oyuncu kartlarını UI'da gösterme (CardUI spawn)
+    // ------------------------------
     public void SpawnPlayerCards(List<CardData> selectedCards)
     {
         for (int i = 0; i < selectedCards.Count && i < playerGridPositions.Length; i++)
         {
             var cardData = selectedCards[i];
+
+            // CardUI prefabını grid konumuna instantiate et
             GameObject go = Instantiate(cardPrefab, playerGridPositions[i].position, Quaternion.identity);
-            go.transform.SetParent(playerGridPositions[i]);
-            CardUI ui = go.GetComponent<CardUI>();
+            go.transform.SetParent(playerGridPositions[i], false); // parent + local sıfır
+
+            var ui = go.GetComponent<CardUI>();
             if (ui != null)
-                ui.SetCardData(cardData, false);
+                ui.SetCardData(cardData, false); // savaş sahnesinde butonlar gizli
         }
     }
 
-    #endregion
-
-    // ---------------------------------------------------------------------
-    #region Karakter Spawn (3D hizalama iyileştirilmiş)
-
+    // ---------------------------------------------------------
+    // 3D KARAKTER SPAWN (oyuncu + düşman) — hizalama iyileştirilmiş
+    // ---------------------------------------------------------
     public void SpawnCharacters(List<CardData> playerCards, List<CardData> enemyCards)
     {
         if (!IsServer)
@@ -157,25 +161,33 @@ public class BattleManager : NetworkBehaviour
         {
             var card = playerCards[i];
             var grid = playerGridPositions[i];
+
+            // Kart özel prefabı varsa onu, yoksa default'u kullan
             var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
-            Debug.Log($"[A] Oyuncu kartı spawn ediliyor -> {card.cardName}, " +
-                      $"Prefab: {(card.characterPrefab3D != null ? card.characterPrefab3D.name : "DefaultPrefab")}");
+            if (prefabToUse == characterPrefab)
+            {
+                Debug.LogWarning($"[Spawn] {card.cardName}: CARD PREFAB YOK → Default kullanılıyor! " +
+                                 "QR prefab yolu/isimleri ve Resources konumunu kontrol et.");
+            }
+
+
+            Debug.Log($"[A] Oyuncu spawn -> {card.cardName}, Prefab: {(card.characterPrefab3D ? card.characterPrefab3D.name : "Default")}");
 
             var obj = Instantiate(prefabToUse, grid.position, grid.rotation);
-            var net = obj.GetComponent<NetworkObject>();
+            var net = obj.GetComponent<Unity.Netcode.NetworkObject>();
 
-            // 1) ÖNCE SPAWN
-            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+            // 1) Spawn
+            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
                 net.Spawn();
 
-            // 2) SONRA PARENT
-            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+            // 2) Parent
+            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
                 net.TrySetParent(grid, false);
             else
                 obj.transform.SetParent(grid, false);
 
-            // 3) HİZALAMA
+            // 3) Lokal hizalama
             obj.transform.localPosition = Vector3.zero;
             obj.transform.localRotation = Quaternion.identity;
             obj.transform.localScale = Vector3.one;
@@ -193,24 +205,24 @@ public class BattleManager : NetworkBehaviour
         {
             var card = enemyCards[i];
             var grid = enemyGridPositions[i];
+
             var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
 
-            Debug.Log($"[B] Düşman kartı spawn ediliyor -> {card.cardName}, " +
-                      $"Prefab: {(card.characterPrefab3D != null ? card.characterPrefab3D.name : "DefaultPrefab")}");
+            Debug.Log($"[B] Düşman spawn -> {card.cardName}, Prefab: {(card.characterPrefab3D ? card.characterPrefab3D.name : "Default")}");
 
             var obj = Instantiate(prefabToUse, grid.position, grid.rotation);
-            var net = obj.GetComponent<NetworkObject>();
+            var net = obj.GetComponent<Unity.Netcode.NetworkObject>();
 
-            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
                 net.Spawn();
 
-            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
                 net.TrySetParent(grid, false);
             else
                 obj.transform.SetParent(grid, false);
 
             obj.transform.localPosition = Vector3.zero;
-            obj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            obj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // rakip bize dönsün
             obj.transform.localScale = Vector3.one;
 
             var ch = obj.GetComponent<Character>();

@@ -22,7 +22,7 @@ public class HandUIManager : MonoBehaviour
         drawPile.AddRange(playerDeck);
         Shuffle(drawPile);
         DrawTo(handSize);
-        RenderHand();
+        //RenderHand();
 
         deckBackButton.onClick.RemoveAllListeners();
         deckBackButton.onClick.AddListener(() =>

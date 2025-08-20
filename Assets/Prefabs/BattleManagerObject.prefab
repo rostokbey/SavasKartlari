@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2100615203
+  GlobalObjectIdHash: 3770103117
   InScenePlacedSourceGlobalObjectIdHash: 4199956950
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -66,8 +66,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19229c07f850c2b418dd36062e5c07a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterPrefab: {fileID: 204635975400443868, guid: d5b6b1ec3d643a4469c4154b380bcb64, type: 3}
-  cardPrefab: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
+  characterPrefab: {fileID: 4555510525080602152, guid: 1a99dd8b306799849869421e91ad40e7, type: 3}
+  cardPrefab: {fileID: 0}
   playerGridPositions:
   - {fileID: 0}
   - {fileID: 0}
@@ -99,5 +99,6 @@ MonoBehaviour:
   attackButton: {fileID: 0}
   skillButton: {fileID: 0}
   enemyCardParent: {fileID: 0}
-  cardSlotPrefab: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
+  cardSlotPrefab: {fileID: 0}
+  startBattleButton: {fileID: 0}
   currentTurnClientId: 0

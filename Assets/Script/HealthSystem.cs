@@ -54,7 +54,7 @@ public class HealthSystem : NetworkBehaviour
         if (damagePopupPrefab != null)
         {
             var popup = Instantiate(damagePopupPrefab, transform.position + Vector3.up * 1.5f, Quaternion.identity);
-            popup.GetComponent<DamagePopup>().Setup(damage);
+            popup.GetComponent<DamagePopup>().Setup(damage, false, false);
         }
     }
 

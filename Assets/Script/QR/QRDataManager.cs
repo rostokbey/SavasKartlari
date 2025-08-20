@@ -7,22 +7,18 @@ public class QRDataManager : MonoBehaviour
 {
     public static QRDataManager Instance;
 
+    [Header("Preview UI (opsiyonel)")]
     public Image characterImage;
-    public TextMeshProUGUI nameText;
-    public TextMeshProUGUI hpText;
-    public TextMeshProUGUI strText;
-    public TextMeshProUGUI abilityText;
-    public TextMeshProUGUI passiveText;
-
+    public TextMeshProUGUI nameText, hpText, strText, abilityText, passiveText;
     public Sprite defaultSprite;
 
-    private void Awake()
-    {
-        Instance = this;
-    }
+    public static System.Action<CardData> OnCardReady;
+
+    void Awake() => Instance = this;
 
     public void ParseQRData(string qrText)
     {
+        // --- 1) QR sözlüğe ayrıştır ---
         var data = new Dictionary<string, string>();
         foreach (var part in qrText.Split('|'))
         {
@@ -31,66 +27,65 @@ public class QRDataManager : MonoBehaviour
         }
 
         string id = data.TryGetValue("ID", out var _id) ? _id : "NONE";
-        string name = data.TryGetValue("NAME", out var _nm) ? _nm : "Unknown";
-        string hp = data.TryGetValue("HP", out var _hp) ? _hp : "0";
-        string str = data.TryGetValue("STR", out var _str) ? _str : "0";
+        string nameRaw = data.TryGetValue("NAME", out var _nm) ? _nm : "Unknown";
         string ability = data.TryGetValue("ABILITY", out var _ab) ? _ab : "None";
         string passive = data.TryGetValue("PASSIVE", out var _ps) ? _ps : "None";
         string rarity = data.TryGetValue("RARITY", out var _rt) ? _rt : "Yaygın";
-        string prefabPath = data.TryGetValue("PREFAB", out var _pp) ? _pp : null;
+        string prefabPath = data.TryGetValue("PREFAB", out var _pp) ? _pp?.Trim() : null;
 
-        // UI
-        nameText.text = name.Replace("_", " ");
-        hpText.text = "HP: " + hp;
-        strText.text = "STR: " + str;
-        abilityText.text = "Ability: " + ability;
-        passiveText.text = "Passive: " + passive;
+        // Sayıları güvenli çevir
+        int hp = (data.TryGetValue("HP", out var _hp) && int.TryParse(_hp, out var hpVal)) ? hpVal : 0;
+        int str = (data.TryGetValue("STR", out var _str) && int.TryParse(_str, out var strVal)) ? strVal : 0;
+
+        // UI önizleme (varsa)
+        if (nameText) nameText.text = nameRaw.Replace("_", " ");
+        if (hpText) hpText.text = "HP: " + hp;
+        if (strText) strText.text = "STR: " + str;
+        if (abilityText) abilityText.text = "Ability: " + ability;
+        if (passiveText) passiveText.text = "Passive: " + passive;
 
         // 2D sprite (opsiyonel)
-        var loadedSprite = Resources.Load<Sprite>("Characters/" + name);
-        characterImage.sprite = loadedSprite != null ? loadedSprite : defaultSprite;
+        var loadedSprite = Resources.Load<Sprite>("Characters/" + nameRaw);
+        if (characterImage)
+            characterImage.sprite = loadedSprite ? loadedSprite : defaultSprite;
 
-        // 3D model (blend/prefab)
+        // --- 2) 3D Prefab bul ---
         GameObject loadedPrefab = null;
 
-        // 1) QR’dan geldi ise onu dene
+        // a) QR PREFAB alanı geldiyse önce onu dene
         if (!string.IsNullOrEmpty(prefabPath))
             loadedPrefab = Resources.Load<GameObject>(prefabPath);
 
-        // 2) Gelmediyse NAME ile otomatik dene
-        if (loadedPrefab == null)
-            loadedPrefab = Resources.Load<GameObject>("Prefabs3D/" + name);
+        // b) Olmazsa NAME ile dene (Resources/Prefabs3D/NAME)
+        if (!loadedPrefab)
+            loadedPrefab = Resources.Load<GameObject>("Prefabs3D/" + nameRaw);
 
-        if (loadedPrefab != null)
+        if (loadedPrefab)
             Debug.Log("🧩 3D Prefab yüklendi: " + loadedPrefab.name);
         else
-            Debug.LogWarning("❌ 3D Prefab bulunamadı. Aranan yol: " + (prefabPath ?? ("Prefabs3D/" + name)));
+            Debug.LogWarning("❌ 3D Prefab bulunamadı. Aranan: " + (prefabPath ?? ("Prefabs3D/" + nameRaw)));
 
-        // Kart verisi
+        // --- 3) CardData oluştur ---
         var card = new CardData(
             id: id,
-            cardName: name,
-            baseHP: int.Parse(hp),
-            baseDamage: int.Parse(str),
+            cardName: nameRaw,
+            baseHP: hp,
+            baseDamage: str,
             rarity: rarity,
             ability: ability,
             passive: passive,
             level: 1,
             xp: 0,
             skillCooldownMax: 3,
-            characterSprite: characterImage.sprite
+            characterSprite: characterImage ? characterImage.sprite : null
         );
         card.characterPrefab3D = loadedPrefab;
 
+        // Envantere ve desteye ekle
         FindObjectOfType<PlayerInventory>()?.AddCard(card);
         FindObjectOfType<DeckManagerObject>()?.fullDeck.Add(card);
 
-        // (Opsiyonel) dinleyenlere haber ver – test spawn için çok işe yarar
+        // Dışarı haber ver (isteğe bağlı)
         OnCardReady?.Invoke(card);
     }
-
-    // Kart hazır olduğunda tetiklenecek event (opsiyonel)
-    public static System.Action<CardData> OnCardReady;
-
 }
-
