@@ -20,10 +20,10 @@ public class BattleSceneLoader : MonoBehaviour
             CardUI ui = cardGO.GetComponent<CardUI>();
             if (ui != null)
             {
-                ui.SetCardData(card);
+                ui.SetCardData(card, true); // Oyuncu kartı yüzü açık
             }
         }
-        Debug.Log("✅ Oyuncu kartları sahneye basıldı");
+        Debug.Log("Oyuncu kartları sahneye basıldı.");
     }
 
     void SpawnEnemyCards()
@@ -34,9 +34,9 @@ public class BattleSceneLoader : MonoBehaviour
             CardUI ui = cardGO.GetComponent<CardUI>();
             if (ui != null)
             {
-                ui.SetCardData(card);
+                ui.SetCardData(card, false); // Düşman kartı yüzü kapalı
             }
         }
-        Debug.Log("✅ Düşman kartları sahneye basıldı");
+        Debug.Log("Düşman kartları sahneye basıldı.");
     }
 }

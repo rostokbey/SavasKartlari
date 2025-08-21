@@ -3003,11 +3003,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 557924538}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 02e392123f7e88546aaf53273f905243, type: 3}
+  m_Script: {fileID: 11500000, guid: 750fe5bd3e2e9544fa8cfe3627f50716, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUIPrefab: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
-  contentArea: {fileID: 1999956193}
+  nameText: {fileID: 0}
+  hpText: {fileID: 0}
+  damageText: {fileID: 0}
+  levelText: {fileID: 0}
+  xpText: {fileID: 0}
+  dexText: {fileID: 0}
+  characterImage: {fileID: 0}
+  backImage: {fileID: 0}
+  detailButton: {fileID: 0}
+  selectButton: {fileID: 0}
+  isInBattle: 0
 --- !u!1 &638826408
 GameObject:
   m_ObjectHideFlags: 0

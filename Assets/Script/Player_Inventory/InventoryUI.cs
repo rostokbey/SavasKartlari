@@ -1,12 +1,11 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class InventoryUI : MonoBehaviour
 {
-    [Header("UI Referansları")]
-    public GameObject cardUIPrefab;      // 💡 CardUI prefabını buraya sürükle
-    public Transform contentArea;        // 💡 ScrollView > Viewport > Content objesini buraya sürükle
+    [Header("UI Refs")]
+    [SerializeField] private Transform contentArea;     // Kartların ekleneceği Content
+    [SerializeField] private GameObject cardUIPrefab;   // Üzerinde CardUI_Inventory olan prefab
 
     private void OnEnable()
     {
@@ -15,31 +14,23 @@ public class InventoryUI : MonoBehaviour
 
     public void RefreshInventory()
     {
-        if (PlayerInventory.Instance == null)
-        {
-            Debug.LogError("❌ PlayerInventory.Instance bulunamadı!");
+        if (contentArea == null || cardUIPrefab == null || PlayerInventory.Instance == null)
             return;
-        }
 
-        // 🧹 Önce içerikleri temizle
+        // Eski itemları temizle
         foreach (Transform child in contentArea)
-        {
             Destroy(child.gameObject);
-        }
 
-        // 🔁 Her bir kart için prefab oluştur
-        foreach (var card in PlayerInventory.Instance.myCards)
+        // Mevcut kartları listele
+        List<CardData> cards = PlayerInventory.Instance.myCards;
+        if (cards == null) return;
+
+        foreach (var card in cards)
         {
-            GameObject cardUIObj = Instantiate(cardUIPrefab, contentArea);
-            CardUI cardUI = cardUIObj.GetComponent<CardUI>();
-            if (cardUI != null)
-            {
-                cardUI.SetCardData(card);
-            }
-            else
-            {
-                Debug.LogWarning("CardUI componenti prefab içinde eksik!");
-            }
+            var go = Instantiate(cardUIPrefab, contentArea);
+            var ui = go.GetComponent<CardUI>();   // Envanter için kullandığımız script
+            if (ui != null)
+                ui.SetCardData(card);
         }
     }
 }

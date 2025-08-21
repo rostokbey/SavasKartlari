@@ -79,10 +79,24 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
 
         // Oyuncu tarafının kart UI'larını göster
-        //SpawnPlayerCards(playerCards);
+        SpawnPlayerCards(playerCards);
 
         // Düşman destesini UI'da göster ()
         //ShowEnemyDeck(enemyCards);
+        // Kart listelerini aldıktan sonra:
+        var handUI = FindObjectOfType<HandUIManager>(true);
+        if (handUI != null && StartBattleManager.Instance != null)
+        {
+            var playerDeck = StartBattleManager.Instance.selectedMatchCards;
+
+            // Sadece TEK çağrı! İkinciyi sil.
+            // Eğer HandUIManager.cardUIPrefab'ı Inspector'dan zaten CardUI_BattlePrefab'a atadıysan:
+            handUI.Init(playerDeck);
+
+            // Eğer Inspector’da atamadıysan ve koddan vermek istiyorsan:
+            // handUI.Init(playerDeck, cardUIBattlePrefabRef); // (GameObject referansı)
+        }
+
 
         // 3D karakterleri sahneye bas deneme satrı sonra sil!!!
         SpawnCharacters(playerCards, enemyCards);
@@ -90,12 +104,8 @@ public class BattleManager : NetworkBehaviour
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
 
-        //var handUI = FindObjectOfType<HandUIManager>();
-        //if (handUI != null)
-        //{
-        //    var playerDeck = StartBattleManager.Instance.selectedMatchCards;
-         //   handUI.Init(playerDeck, cardPrefab);
-       // }
+       
+        
 
     }
 

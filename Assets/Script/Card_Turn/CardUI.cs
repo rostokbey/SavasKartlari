@@ -1,5 +1,4 @@
-﻿using System.Xml.Linq;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +11,13 @@ public class CardUI : MonoBehaviour
     public TMP_Text levelText;
     public TMP_Text xpText;
     public TMP_Text dexText;
-    public Image characterImage;
+
+    [Tooltip("Kartın ön yüzü (karakter görseli)")]
+    public Image characterImage;   // front
+    [Tooltip("Kartın arka yüzü (ters kapak görseli)")]
+    public Image backImage;        // back (opsiyonel)
+
+    [Header("Butonlar (envanterde görünür)")]
     public Button detailButton;
     public Button selectButton;
 
@@ -23,7 +28,7 @@ public class CardUI : MonoBehaviour
 
     void Start()
     {
-        // Detay butonu ayarı
+        // Detay butonu
         if (detailButton != null)
         {
             detailButton.onClick.RemoveAllListeners();
@@ -31,77 +36,84 @@ public class CardUI : MonoBehaviour
             detailButton.gameObject.SetActive(!isInBattle);
         }
 
-        // Seç butonu ayarı
+        // Seç butonu
         if (selectButton != null)
         {
             selectButton.onClick.RemoveAllListeners();
             selectButton.onClick.AddListener(OnSelectClicked);
-            selectButton.gameObject.SetActive(!isInBattle); // Savaşta görünmesin
+            selectButton.gameObject.SetActive(!isInBattle);
         }
     }
 
+    // ---- Overload 1: Eski çağrıları korumak için (tek parametre) ----
+    public void SetCardData(CardData data)
+    {
+        SetCardData(data, true); // default: butonlar açık
+    }
+
+    // ---- Overload 2: Envanter/Savaş genel kullanım ----
     public void SetCardData(CardData data, bool showButtons = true)
     {
         cardData = data;
 
-        nameText.text = data.cardName.Replace("_", " ");
-        hpText.text = "HP: " + data.baseHP;
-        damageText.text = "STR: " + data.baseDamage;
-        levelText.text = "Lv: " + data.level;
-        xpText.text = "XP: " + data.xp + "/100";
-        dexText.text = "DEX: " + data.dex;
+        if (nameText) nameText.text = data.cardName.Replace("_", " ");
+        if (hpText) hpText.text = "HP: " + data.baseHP;
+        if (damageText) damageText.text = "STR: " + data.baseDamage;
+        if (levelText) levelText.text = "Lv: " + data.level;
+        if (xpText) xpText.text = "XP: " + data.xp + "/100";
+        if (dexText) dexText.text = "DEX: " + data.dex;
 
-        if (characterImage != null)
-            characterImage.sprite = data.characterSprite;
+        if (characterImage) characterImage.sprite = data.characterSprite;
 
-        // Butonları sadece showButtons == true ise göster
-        if (detailButton != null)
-            detailButton.gameObject.SetActive(showButtons);
-        if (selectButton != null)
-            selectButton.gameObject.SetActive(showButtons);
+        // Buton görünürlükleri (savaşta gizlemek için showButtons=false gönder)
+        if (detailButton) detailButton.gameObject.SetActive(showButtons && !isInBattle);
+        if (selectButton) selectButton.gameObject.SetActive(showButtons && !isInBattle);
+
+        // Varsayılan: ön yüz açık
+        SetFaceUp(true);
+    }
+
+    /// Ön/arka yüz kontrolü (elde ters kart göstermek için)
+    public void SetFaceUp(bool faceUp)
+    {
+        if (characterImage) characterImage.gameObject.SetActive(faceUp);
+        if (backImage) backImage.gameObject.SetActive(!faceUp);
     }
 
     public void SetBattleMode(bool on)
     {
-        nameText.gameObject.SetActive(!on);
-        hpText.gameObject.SetActive(!on);
-        dexText.gameObject.SetActive(!on);
-       levelText.gameObject.SetActive(!on);
-        xpText.gameObject.SetActive(!on);
-        detailButton.gameObject.SetActive(!on);
-        // SelectButton açık kalsın (kartı oynamak için) ya da onu da kapatabilirsin
+        isInBattle = on;
+
+        if (nameText) nameText.gameObject.SetActive(!on);
+        if (hpText) hpText.gameObject.SetActive(!on);
+        if (dexText) dexText.gameObject.SetActive(!on);
+        if (levelText) levelText.gameObject.SetActive(!on);
+        if (xpText) xpText.gameObject.SetActive(!on);
+
+        if (detailButton) detailButton.gameObject.SetActive(!on);
+        // selectButton'ı savaş akışına göre açık/kapalı bırakabilirsin
     }
 
-
+    // ---- Tıklama API'lerin (sende zaten vardı) ----
     public System.Action onClick;
 
     public void SetInteractable(bool b)
     {
-        var btn = GetComponent<UnityEngine.UI.Button>();
-        if (btn != null) btn.interactable = b;
+        var btn = GetComponent<Button>();
+        if (btn) btn.interactable = b;
     }
 
-    // Button OnClick'ten bağlayacağız
-    public void OnButtonClick()
-    {
-        onClick?.Invoke();
-    }
-
-
+    public void OnButtonClick() => onClick?.Invoke();
 
     public void OnCardClicked()
     {
         if (!isInBattle)
-        {
             CardDetailPanel.Instance?.ShowCardDetails(cardData);
-        }
     }
 
     public void OnSelectClicked()
     {
         if (!isInBattle)
-        {
             DeckSelectPopup.Instance?.ShowDeckChoice(this.cardData);
-        }
     }
 }

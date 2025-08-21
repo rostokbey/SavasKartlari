@@ -1,87 +1,103 @@
 ﻿using UnityEngine;
 using Unity.Netcode;
-using UnityEngine.UI;
-using System.Collections;
 
 public class HealthSystem : NetworkBehaviour
 {
-    [SerializeField] private Slider hpSlider;
-    [SerializeField] private GameObject damagePopupPrefab;
+    [Header("HP & Shield")]
+    public int maxHP = 100;
+    public NetworkVariable<int> currentHP = new NetworkVariable<int>(
+        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public int shield = 0;
 
-    private NetworkVariable<int> currentHP = new NetworkVariable<int>(100);
-    private int maxHP = 100;
-    private int shield = 0;
+    [Header("FX")]
+    [Tooltip("Resources/Prefabs/FX/DamagePopup.prefab gibi bir prefab")]
+    public GameObject damagePopupPrefab;
+
+    void Awake()
+    {
+        // Editor’de test ederken boş gelirse güvenlik ağı:
+        if (maxHP <= 0) maxHP = 100;
+    }
 
     public override void OnNetworkSpawn()
     {
-        currentHP.OnValueChanged += OnHealthChanged;
-
-        if (IsOwner && hpSlider != null)
+        // Sunucu kişinin canını başlatır
+        if (IsServer)
         {
-            hpSlider.maxValue = maxHP;
-            hpSlider.value = currentHP.Value;
+            if (currentHP.Value <= 0) currentHP.Value = maxHP;
         }
     }
 
-    private void OnHealthChanged(int oldVal, int newVal)
-    {
-        if (IsOwner && hpSlider != null)
-        {
-            hpSlider.value = newVal;
-        }
-    }
-
+    // ====== Server API ======
     [ServerRpc(RequireOwnership = false)]
     public void TakeDamageServerRpc(int damage)
     {
-        int finalDamage = Mathf.Max(0, damage - shield);
-        shield = Mathf.Max(0, shield - damage);
-        currentHP.Value = Mathf.Max(0, currentHP.Value - finalDamage);
+        int beforeShield = shield;
 
-        Debug.Log($"{OwnerClientId} hasar aldı: {finalDamage}, kalan HP: {currentHP.Value}");
+        // Kalkan önce hasarı emer
+        int shieldAbsorb = Mathf.Min(shield, damage);
+        shield -= shieldAbsorb;
 
-        ShowDamageClientRpc(finalDamage);
+        int remaining = Mathf.Max(0, damage - shieldAbsorb);
+        currentHP.Value = Mathf.Max(0, currentHP.Value - remaining);
 
+        Debug.Log($"[HS] Hasar {damage} (kalkan {beforeShield}->{shield}) kalan HP: {currentHP.Value}");
+
+        ShowDamageClientRpc(remaining, false, false, false); // crit=false, heal=false, shield=false
         if (currentHP.Value <= 0)
-        {
-            Debug.Log($"{OwnerClientId} öldü!");
-        }
-    }
-
-    [ClientRpc]
-    private void ShowDamageClientRpc(int damage)
-    {
-        if (damagePopupPrefab != null)
-        {
-            var popup = Instantiate(damagePopupPrefab, transform.position + Vector3.up * 1.5f, Quaternion.identity);
-            popup.GetComponent<DamagePopup>().Setup(damage, false, false);
-        }
+            Die();
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void HealServerRpc(int amount)
     {
-        currentHP.Value = Mathf.Min(currentHP.Value + amount, maxHP);
+        if (amount <= 0) return;
+        int old = currentHP.Value;
+        currentHP.Value = Mathf.Min(maxHP, currentHP.Value + amount);
+        int gained = currentHP.Value - old;
+
+        if (gained > 0)
+            ShowDamageClientRpc(gained, false, true, false); // heal
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void AddShieldServerRpc(int amount)
     {
+        if (amount <= 0) return;
         shield += amount;
+        ShowDamageClientRpc(amount, false, false, true); // shield gain
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void TakeDamageOverTimeServerRpc(int damagePerTick, int ticks)
+    // ====== Client FX ======
+    [ClientRpc]
+    private void ShowDamageClientRpc(int amount, bool isCritical, bool isHeal, bool isShieldGain)
     {
-        StartCoroutine(DamageOverTimeCoroutine(damagePerTick, ticks));
-    }
+        if (damagePopupPrefab == null) return;
 
-    private IEnumerator DamageOverTimeCoroutine(int damage, int times)
-    {
-        for (int i = 0; i < times; i++)
+        var pos = transform.position + Vector3.up * 1.5f;
+        var popup = Object.Instantiate(damagePopupPrefab, pos, Quaternion.identity);
+
+        var dp = popup.GetComponent<DamagePopup>();
+        if (dp != null)
         {
-            TakeDamageServerRpc(damage);
-            yield return new WaitForSeconds(1.5f);
+            // Senin DamagePopup imzan:
+            //dp.Setup(amount);
+
+            // Eğer sende sadece tek parametreli varsa, şunu kullan:
+             dp.Setup(amount);
+        }
+    }
+
+    // ====== Utils ======
+    private void Die()
+    {
+        Debug.Log($"[HS] {OwnerClientId} öldü.");
+        // Basitçe yok et; istersen anim/olay tetikle
+        var netObj = GetComponent<NetworkObject>();
+        if (IsServer)
+        {
+            if (netObj) netObj.Despawn(true);
+            else Destroy(gameObject);
         }
     }
 }

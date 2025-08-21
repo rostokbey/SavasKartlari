@@ -23,7 +23,7 @@ public class InventoryPanel : MonoBehaviour
         {
             GameObject cardUIObj = Instantiate(cardUIPrefab, contentArea);
             CardUI cardUI = cardUIObj.GetComponent<CardUI>();
-            cardUI.SetCardData(card);
+            cardUI.SetCardData(card, true);
         }
     }
 }

@@ -53,7 +53,7 @@ public class TurnDrawManager : MonoBehaviour
         CardUI cardUI = cardGO.GetComponent<CardUI>();
         if (cardUI != null)
         {
-            cardUI.SetCardData(nextCard);
+            cardUI.SetCardData(nextCard, true);
         }
     }
 }
