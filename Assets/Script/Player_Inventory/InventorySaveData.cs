@@ -19,6 +19,7 @@ public class CardDTO
 
     public int baseHP;
     public int baseDamage;
+    public int baseDEX;
 
     public string rarity;
     public string ability;
@@ -28,7 +29,7 @@ public class CardDTO
     public int xp;
     public int skillCooldownMax;
 
-    public int dex;
+   
 
     // Sprite diske yazýlamaz. Sadece path tutuyoruz (isteðe baðlý).
     public string spritePath;
@@ -51,6 +52,7 @@ public static class CardDataMapper
 
             baseHP = c.baseHP,
             baseDamage = c.baseDamage,
+            baseDEX = c.baseDEX,
 
             rarity = c.rarity,
             ability = c.ability,
@@ -60,7 +62,7 @@ public static class CardDataMapper
             xp = c.xp,
             skillCooldownMax = c.skillCooldownMax,
 
-            dex = c.dex,
+           
 
             // Sprite/Prefab için yalnýzca isim/yol saklýyoruz (varsa)
             spritePath = c.characterSprite != null ? c.characterSprite.name : null,
@@ -88,6 +90,7 @@ public static class CardDataMapper
             d.cardName,
             d.baseHP,
             d.baseDamage,
+            d.baseDEX,
             d.rarity,
             d.ability,
             d.passive,
@@ -95,8 +98,8 @@ public static class CardDataMapper
             d.xp,
             d.skillCooldownMax,
             sp,
-            prefab,
-            d.dex
+            prefab
+            
         );
     }
 }

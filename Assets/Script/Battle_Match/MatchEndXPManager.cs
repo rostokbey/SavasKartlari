@@ -1,32 +1,25 @@
-// MatchEndXPManager.cs – Maç sonu XP ve seviye sistemi
-
 using UnityEngine;
 using System.Collections.Generic;
 
+/// Maç bitiminde çaðýr: iki tarafýn sahaya çýkan kart listeleriyle.
 public class MatchEndXPManager : MonoBehaviour
 {
-    public int xpPerWin = 50;
-    public int xpPerLoss = 20;
-    public int xpToLevelUp = 100;
-
-    public void GrantMatchRewards(bool isWinner, List<CardData> usedCards)
+    public void GrantMatchRewards(bool myTeamWon, List<CardData> myUsed, List<CardData> oppUsed)
     {
-        int xpGained = isWinner ? xpPerWin : xpPerLoss;
+        if (myUsed == null) myUsed = new List<CardData>();
+        if (oppUsed == null) oppUsed = new List<CardData>();
 
-        foreach (var card in usedCards)
+        if (myTeamWon)
         {
-            card.xp += xpGained;
-            Debug.Log($"{card.cardName} kartý {xpGained} XP kazandý (Toplam XP: {card.xp})");
-
-            if (card.xp >= xpToLevelUp)
-            {
-                card.level++;
-                card.baseHP += 10;
-                card.baseDamage += 2;
-                card.xp = 0;
-
-                Debug.Log($"{card.cardName} seviye atladý! Yeni seviye: {card.level}");
-            }
+            int xp = CardLevelSystem.Instance.ComputeWinXp(myUsed, oppUsed);
+            foreach (var c in myUsed) CardLevelSystem.Instance.AddXP(c, xp);
         }
+        else
+        {
+            int xp = CardLevelSystem.Instance.ComputeLossXp(myUsed, oppUsed); // negatif
+            foreach (var c in myUsed) CardLevelSystem.Instance.AddXP(c, xp);
+        }
+
+        PlayerInventory.Instance?.SaveToDisk();
     }
 }

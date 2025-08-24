@@ -34,7 +34,7 @@ public class CardDetailPanel : MonoBehaviour
     public void ShowCardDetails(CardData card)
     {
         nameText.text = card.cardName.Replace("_", " ");
-        dexText.text = "DEX: " + card.dex;
+        
         classText.text = "Class: " + card.className;
         raceText.text = "Irk: " + card.race;
         comboText.text = "Kombinasyon: " + card.combo;

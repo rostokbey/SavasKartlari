@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
@@ -8,36 +9,56 @@ public class PlayerInventory : MonoBehaviour
     [Header("Cards")]
     public List<CardData> myCards = new List<CardData>();
 
-    // Profil kimliği: LocalLogin.cs buraya yazar/okur
-    public static string CurrentProfileId { get; set; } = "default";
+    public static string CurrentProfileId { get; set; } = "DEFAULT";
 
-    // ---- Unity lifecycle ----
+    [SerializeField] float autoSaveInterval = 210f;
+    Coroutine autoSaveCo;
+
     void Awake()
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
         else { Destroy(gameObject); return; }
 
-        LoadFromDisk(); // oyuna girerken yükle
+        LoadFromDisk();                    // oyuna girerken yükle
+        if (autoSaveCo == null) autoSaveCo = StartCoroutine(AutoSaveLoop());
+    }
+
+    IEnumerator AutoSaveLoop()
+    {
+        var w = new WaitForSeconds(autoSaveInterval);
+        while (true)
+        {
+            yield return w;
+            SaveToDisk();
+        }
     }
 
     void OnApplicationQuit() => SaveToDisk();
+    void OnApplicationPause(bool pause) { if (pause) SaveToDisk(); }
+    void OnApplicationFocus(bool hasFocus) { if (!hasFocus) SaveToDisk(); }
+    void OnDestroy() => SaveToDisk();
 
-    // ---- API ----
-    public void AddCard(CardData card)
+    // ----------------------------------------------------------
+    //  Envanter API
+    // ----------------------------------------------------------
+
+    public void AddCard(CardData card, int duplicateScanXp = 100)
     {
         if (card == null) return;
 
-        // Aynı ID varsa kopya eklemeyelim (istersen kaldır)
-        if (myCards.Exists(c => c.id == card.id))
+        // Aynı id'li kart daha önce eklenmişse → kopya yerine XP ver
+        var existing = myCards.Find(c => c.id == card.id);
+        if (existing != null)
         {
-            Debug.Log($"[Inventory] Kart zaten var: {card.id}");
+            CardLevelSystem.Instance?.AddExperience(existing, duplicateScanXp);
+            SaveToDisk();
+            Debug.Log($"[Inventory] Kopya QR: {existing.cardName} +{duplicateScanXp} XP verildi.");
             return;
         }
 
+        // Yeni kart
         myCards.Add(card);
-        Debug.Log($"[Inventory] Kart eklendi: {card.cardName}");
-
-        SaveToDisk(); // istersen yoruma al
+        SaveToDisk();
     }
 
     public bool RemoveCard(string cardId)
@@ -52,14 +73,18 @@ public class PlayerInventory : MonoBehaviour
         return false;
     }
 
-    // ---- Persist ----
+    // ----------------------------------------------------------
+    //  Save / Load
+    // ----------------------------------------------------------
+
     public void SaveToDisk()
     {
+        // InventorySaveData { List<CardDTO> cards = new(); }
         var data = new InventorySaveData();
         foreach (var c in myCards)
             data.cards.Add(CardDataMapper.ToDTO(c));
-
         SaveSystem.SaveInventory(CurrentProfileId, data);
+
     }
 
     public void LoadFromDisk()
@@ -67,40 +92,25 @@ public class PlayerInventory : MonoBehaviour
         myCards.Clear();
         var data = SaveSystem.LoadInventory(CurrentProfileId);
         foreach (var dto in data.cards)
-            myCards.Add(CardDataMapper.FromDTO(dto));
+        {
+            var c = CardDataMapper.FromDTO(dto);
+
+            // Liste sprite’ını diskte çöz
+            c.characterSprite = CardArtResolver.GetSprite(c, QRDataManager.Instance?.defaultListSprite);
+
+            // Seviye/rol bufflarını uygula (varsa)
+            CardLevelSystem.Instance?.ApplyToCard(c);
+
+            myCards.Add(c);
+        }
+
 
         Debug.Log($"[Inventory] Yüklendi: {myCards.Count} kart (profil: {CurrentProfileId})");
     }
 
-    // ==========================================================
-    // ====== Eski projeden kalan İSİMLER için "stub" metodlar ==
-    // Bu metodlar başka scriptlerde referanslandığı için derleme
-    // hatasını kesmek üzere eklendi. Oyun mekaniğine göre
-    // istersen gerçek mantığı taşıyabilirsin.
-    // ==========================================================
+    // İsteğe bağlı yardımcı: ilk kartı "aktif" say
+    public CardData GetActiveCard() => (myCards.Count > 0) ? myCards[0] : null;
 
-    // Örn: Aktif kart mantığın yoksa ilk kartı döndür.
-    public CardData GetActiveCard()
-    {
-        return (myCards.Count > 0) ? myCards[0] : null;
-    }
-
-    // Örn: Her zaman kullanılabilir dön (mekaniğe bağla istersen)
-    public bool CanUseSkill()
-    {
-        return true;
-    }
-
-    // Örn: hepsinin cooldown’unu sıfırla (eğer kullanıyorsan)
-    public void ResetSkillCooldown()
-    {
-        // Eğer CardData’da per-card cooldown tutuyorsan burada sıfırla.
-        Debug.Log("[Inventory] ResetSkillCooldown (stub)");
-    }
-
-    // Tur başlangıcında çağrılıyorsa, gerek varsa buraya yaz
-    public void OnTurnStart()
-    {
-        Debug.Log("[Inventory] OnTurnStart (stub)");
-    }
+    public void ResetSkillCooldown() { /* şimdilik stub */ }
+    public void OnTurnStart() { /* şimdilik stub */ }
 }

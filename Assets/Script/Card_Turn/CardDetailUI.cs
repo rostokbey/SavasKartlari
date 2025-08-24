@@ -8,6 +8,7 @@ public class CardDetailUI : MonoBehaviour
     public TMP_Text nameText;
     public TMP_Text hpText;
     public TMP_Text strText;
+    public TMP_Text dexText;
     public TMP_Text rarityText;
     public TMP_Text abilityText;
     public TMP_Text passiveText;
@@ -18,6 +19,7 @@ public class CardDetailUI : MonoBehaviour
         nameText.text = card.cardName.Replace("_", " ");
         hpText.text = "HP: " + card.baseHP;
         strText.text = "STR: " + card.baseDamage;
+        dexText.text = "DEX: " + card.baseDEX;
         rarityText.text = "Rarity: " + card.rarity;
         abilityText.text = "Ability: " + card.ability;
         passiveText.text = "Passive: " + card.passive;

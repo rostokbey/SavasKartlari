@@ -1,69 +1,141 @@
-
-using System.Security.Cryptography;
-using System.Text;
+using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
 
 public class LocalLogin : MonoBehaviour
 {
-    public TMP_InputField usernameInput;
-    public TMP_InputField passwordInput;
+    [Header("Panels")]
+    public GameObject loginPanel;          // Sadece Login UI
+    public GameObject lobbyPanel;          // Lobby (login'den sonra otomatik açýlmayacak)
+
+    [Tooltip("Giriþten SONRA görünmesini istediðin ekstra UI kökleri (örn: alt buton barýnýn parent'ý).")]
+    public List<GameObject> showAfterLogin = new List<GameObject>();
+
+    [Header("Inputs & Buttons")]
+    public InputField usernameInput;
+    public InputField passwordInput;
     public Button loginButton;
+    public Button logoutButton;
+    public Button saveButton;
+
+    [Header("Options")]
+    [Tooltip("Uygulama açýldýðýnda son profil ile otomatik giriþ denesin mi?")]
+    public bool autoLoginOnStart = true;
+
+    // PlayerPrefs anahtarlarý
+    const string Key_ProfileId = "PROFILE_ID";
+    const string Key_Remember = "REMEMBER_ME";
+
+    void Awake()
+    {
+        // Ýlk karede sadece LoginPanel açýk kalsýn
+        SetActiveSafe(loginPanel, true);
+        SetActiveSafe(lobbyPanel, false);
+        SetListActive(showAfterLogin, false);
+
+        // Buton baðlarý
+        if (loginButton) loginButton.onClick.AddListener(OnClick_Login);
+        if (logoutButton) logoutButton.onClick.AddListener(OnClick_Logout);
+        if (saveButton) saveButton.onClick.AddListener(OnClick_Save);
+    }
 
     void Start()
     {
-        loginButton.onClick.AddListener(OnLogin);
+        if (!autoLoginOnStart) return;
+
+        var remember = PlayerPrefs.GetInt(Key_Remember, 0) == 1;
+        var pid = PlayerPrefs.GetString(Key_ProfileId, "DEFAULT");
+
+        if (remember && !string.IsNullOrEmpty(pid))
+        {
+            // Sessiz Login: paneli kapat, UI’larý aç, envanter yükle
+            DoLogin(pid, silent: true);
+        }
     }
 
-    static string Hash(string s)
+    // ----------------- UI helpers -----------------
+    void SetActiveSafe(GameObject go, bool v) { if (go) go.SetActive(v); }
+    void SetListActive(List<GameObject> list, bool v) { foreach (var go in list) SetActiveSafe(go, v); }
+
+    void ShowOnlyLoginPanel(bool show)
     {
-        using var sha = SHA256.Create();
-        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(s));
-        var sb = new StringBuilder();
-        foreach (var b in bytes) sb.Append(b.ToString("x2"));
-        return sb.ToString();
+        SetActiveSafe(loginPanel, show);
+        // Login ekraný açýkken Lobby ve diðerleri kapalý
+        if (show)
+        {
+            SetActiveSafe(lobbyPanel, false);
+            SetListActive(showAfterLogin, false);
+        }
     }
 
-    void OnLogin()
+    // ----------------- Button handlers -----------------
+    void OnClick_Login()
     {
-        var user = usernameInput.text.Trim();
-        var pass = passwordInput.text;
+        string user = usernameInput ? usernameInput.text.Trim() : "DEFAULT";
+        string pass = passwordInput ? passwordInput.text.Trim() : "";
 
-        if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
-        {
-            Debug.LogWarning("Kullanýcý adý/þifre boþ olamaz.");
-            return;
-        }
+        // Bu örnekte þifre kontrolü yok. Ýstersen burada doðrulama yap.
+        if (string.IsNullOrEmpty(user)) user = "DEFAULT";
 
-        var key = $"auth_{user}";
-        var storedHash = PlayerPrefs.GetString(key, "");
+        DoLogin(user, silent: false);
+    }
 
-        var incomingHash = Hash(pass);
+    void OnClick_Logout()
+    {
+        // Kaydet (opsiyonel)
+        TrySaveInventory();
 
-        if (string.IsNullOrEmpty(storedHash))
-        {
-            // Ýlk kez kayýt
-            PlayerPrefs.SetString(key, incomingHash);
-            PlayerPrefs.Save();
-            Debug.Log("Yeni kullanýcý oluþturuldu: " + user);
-        }
-        else
-        {
-            if (storedHash != incomingHash)
-            {
-                Debug.LogError("Þifre hatalý!");
-                return;
-            }
-        }
+        // “remember me” temizle (otomatik giriþ istemeyebiliriz)
+        PlayerPrefs.SetInt(Key_Remember, 0);
+        PlayerPrefs.Save();
 
-        // Aktif profil olarak kullanýcý adý
-        PlayerInventory.CurrentProfileId = user;
+        // UI: sadece Login ekraný açýk kalsýn
+        ShowOnlyLoginPanel(true);
+    }
 
-        // Envanteri bu profile göre yeniden yükle
-        PlayerInventory.Instance.LoadFromDisk();
+    void OnClick_Save()
+    {
+        TrySaveInventory();
+    }
 
-        // Login panelini kapat (istersen)
-        gameObject.SetActive(false);
+    // ----------------- Core login/save/load -----------------
+    void DoLogin(string profileId, bool silent)
+    {
+        // Profil ID’yi hatýrla (otomatik giriþ)
+        PlayerPrefs.SetString(Key_ProfileId, profileId);
+        PlayerPrefs.SetInt(Key_Remember, 1);
+        PlayerPrefs.Save();
+
+        // Profil ID’yi oyunun state’ine yaz
+        PlayerInventory.CurrentProfileId = profileId;
+
+        // Envanteri bu profilden yükle (varsa)
+        TryLoadInventory(profileId);
+
+        // UI: Login panel kapanýr, Lobby AÇILMAZ (istemiyoruz),
+        // sadece “showAfterLogin” listesi açýlýr (örn: alt buton barý).
+        ShowOnlyLoginPanel(false);
+        SetListActive(showAfterLogin, true);
+        // lobbyPanel bilinçli olarak kapalý býrakýlýyor.
+    }
+
+    void TryLoadInventory(string profileId)
+    {
+        var inv = FindObjectOfType<PlayerInventory>();
+        if (inv == null) return;
+
+        PlayerInventory.CurrentProfileId = profileId;
+        inv.LoadFromDisk();
+        Debug.Log($"[LocalLogin] Envanter yüklendi (profil={profileId}).");
+    }
+
+    void TrySaveInventory()
+    {
+        var inv = FindObjectOfType<PlayerInventory>();
+        if (inv == null) return;
+
+        string pid = string.IsNullOrEmpty(PlayerInventory.CurrentProfileId) ? "DEFAULT" : PlayerInventory.CurrentProfileId;
+        inv.SaveToDisk();
+        Debug.Log($"[LocalLogin] Envanter kaydedildi: {pid}");
     }
 }

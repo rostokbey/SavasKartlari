@@ -173,7 +173,9 @@ public class BattleManager : NetworkBehaviour
             var grid = playerGridPositions[i];
 
             // Kart özel prefabı varsa onu, yoksa default'u kullan
-            var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
+            var prefabToUse = ResolvePrefab(card);
+            if (prefabToUse == null) { Debug.LogWarning($"[BM] Prefab yok: {card.cardName}"); continue; }
+
 
             if (prefabToUse == characterPrefab)
             {
@@ -216,7 +218,9 @@ public class BattleManager : NetworkBehaviour
             var card = enemyCards[i];
             var grid = enemyGridPositions[i];
 
-            var prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
+            var prefabToUse = ResolvePrefab(card);
+            if (prefabToUse == null) { Debug.LogWarning($"[BM] Prefab yok (enemy): {card.cardName}"); continue; }
+
 
             Debug.Log($"[B] Düşman spawn -> {card.cardName}, Prefab: {(card.characterPrefab3D ? card.characterPrefab3D.name : "Default")}");
 
@@ -343,7 +347,9 @@ public class BattleManager : NetworkBehaviour
         }
 
         // ✅ Kullanılacak prefab'ı seç
-        GameObject prefabToUse = card.characterPrefab3D != null ? card.characterPrefab3D : characterPrefab;
+        GameObject prefabToUse = ResolvePrefab(card);
+        if (prefabToUse == null) return;
+
 
         // ✅ Spawn pozisyonunu seç
         Vector3 spawnPos = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId
@@ -400,7 +406,26 @@ public class BattleManager : NetworkBehaviour
     }
 
     #endregion
-    // ---------------------------------------------------------------------
+
+    private GameObject ResolvePrefab(CardData card)
+    {
+        // 1) JWT/CSV’den gelen Resources yolu
+        if (!string.IsNullOrEmpty(card.prefab))
+        {
+            var res = Resources.Load<GameObject>(card.prefab);
+            if (res != null) return res;
+            Debug.LogWarning($"[BM] Resources prefab bulunamadı: {card.prefab}  (Kart: {card.cardName})");
+        }
+
+        // 2) Kart üstüne atalı prefab (opsiyonel)
+        if (card.characterPrefab3D != null) return card.characterPrefab3D;
+
+        // 3) Inspector’dan verdiğin default
+        if (characterPrefab != null) return characterPrefab;
+
+        Debug.LogError("[BM] Prefab seçilemedi: characterPrefab da atanmadı!");
+        return null;
+    }
 
     #region UI
 
@@ -421,6 +446,8 @@ public class BattleManager : NetworkBehaviour
                 ui.SetCardData(card, false);
         }
     }
+
+    
 
     #endregion
 }

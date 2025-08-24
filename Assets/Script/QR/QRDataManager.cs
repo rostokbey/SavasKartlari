@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic;
 
 public class QRDataManager : MonoBehaviour
 {
@@ -9,83 +8,88 @@ public class QRDataManager : MonoBehaviour
 
     [Header("Preview UI (opsiyonel)")]
     public Image characterImage;
-    public TextMeshProUGUI nameText, hpText, strText, abilityText, passiveText;
-    public Sprite defaultSprite;
+    public TextMeshProUGUI nameText, hpText, strText, dexText, abilityText, passiveText;
+    public Sprite defaultListSprite;
 
+    /// Kart hazır olduğunda dışarı bildirmek için (opsiyonel)
     public static System.Action<CardData> OnCardReady;
 
     void Awake() => Instance = this;
 
-    public void ParseQRData(string qrText)
+    /// <summary>
+    /// QR’dan gelen metin = JWT string
+    /// </summary>
+    public void ParseQRData(string jwtText)
     {
-        // --- 1) QR sözlüğe ayrıştır ---
-        var data = new Dictionary<string, string>();
-        foreach (var part in qrText.Split('|'))
+        if (string.IsNullOrWhiteSpace(jwtText))
         {
-            var pair = part.Split(':');
-            if (pair.Length == 2) data[pair[0]] = pair[1];
+            Debug.LogWarning("[QR] Boş QR metni.");
+            return;
         }
 
-        string id = data.TryGetValue("ID", out var _id) ? _id : "NONE";
-        string nameRaw = data.TryGetValue("NAME", out var _nm) ? _nm : "Unknown";
-        string ability = data.TryGetValue("ABILITY", out var _ab) ? _ab : "None";
-        string passive = data.TryGetValue("PASSIVE", out var _ps) ? _ps : "None";
-        string rarity = data.TryGetValue("RARITY", out var _rt) ? _rt : "Yaygın";
-        string prefabPath = data.TryGetValue("PREFAB", out var _pp) ? _pp?.Trim() : null;
+        // 1) JWT’yi çöz (imza doğrulama DEV’de kapalı olabilir)
+        if (!JwtCardVerifier.TryParse(jwtText, out var p, out var err))
+        {
+            Debug.LogError("[QR] JWT doğrulama hatası: " + err);
+            return;
+        }
 
-        // Sayıları güvenli çevir
-        int hp = (data.TryGetValue("HP", out var _hp) && int.TryParse(_hp, out var hpVal)) ? hpVal : 0;
-        int str = (data.TryGetValue("STR", out var _str) && int.TryParse(_str, out var strVal)) ? strVal : 0;
+        // 2) UI önizleme (opsiyonel)
+        if (nameText) nameText.text = p.name?.Replace("_", " ") ?? "";
+        if (hpText) hpText.text = "HP: " + p.hp;
+        if (strText) strText.text = "STR: " + p.str;
+        if (dexText) dexText.text = "DEX: " + p.dex;         // Tokenında yoksa 0/varsayılan döner
+        if (abilityText) abilityText.text = "Ability: " + p.ability;
+        if (passiveText) passiveText.text = "Passive: " + p.passive;
 
-        // UI önizleme (varsa)
-        if (nameText) nameText.text = nameRaw.Replace("_", " ");
-        if (hpText) hpText.text = "HP: " + hp;
-        if (strText) strText.text = "STR: " + str;
-        if (abilityText) abilityText.text = "Ability: " + ability;
-        if (passiveText) passiveText.text = "Passive: " + passive;
-
-        // 2D sprite (opsiyonel)
-        var loadedSprite = Resources.Load<Sprite>("Characters/" + nameRaw);
-        if (characterImage)
-            characterImage.sprite = loadedSprite ? loadedSprite : defaultSprite;
-
-        // --- 2) 3D Prefab bul ---
-        GameObject loadedPrefab = null;
-
-        // a) QR PREFAB alanı geldiyse önce onu dene
-        if (!string.IsNullOrEmpty(prefabPath))
-            loadedPrefab = Resources.Load<GameObject>(prefabPath);
-
-        // b) Olmazsa NAME ile dene (Resources/Prefabs3D/NAME)
-        if (!loadedPrefab)
-            loadedPrefab = Resources.Load<GameObject>("Prefabs3D/" + nameRaw);
-
-        if (loadedPrefab)
-            Debug.Log("🧩 3D Prefab yüklendi: " + loadedPrefab.name);
-        else
-            Debug.LogWarning("❌ 3D Prefab bulunamadı. Aranan: " + (prefabPath ?? ("Prefabs3D/" + nameRaw)));
-
-        // --- 3) CardData oluştur ---
-        var card = new CardData(
-            id: id,
-            cardName: nameRaw,
-            baseHP: hp,
-            baseDamage: str,
-            rarity: rarity,
-            ability: ability,
-            passive: passive,
-            level: 1,
-            xp: 0,
-            skillCooldownMax: 3,
-            characterSprite: characterImage ? characterImage.sprite : null
+        // Liste görseli (Characters/NAME ya da CardArtResolver iç mantığın)
+        var listSprite = CardArtResolver.GetSprite(
+            new CardData { cardName = p.name },
+            defaultListSprite
         );
-        card.characterPrefab3D = loadedPrefab;
+        if (characterImage)
+        {
+            characterImage.sprite = listSprite != null ? listSprite : defaultListSprite;
+            characterImage.enabled = (characterImage.sprite != null);
+        }
 
-        // Envantere ve desteye ekle
-        FindObjectOfType<PlayerInventory>()?.AddCard(card);
-        FindObjectOfType<DeckManagerObject>()?.fullDeck.Add(card);
+        // 3) CardData oluştur (prefab YÜKLEME! sadece yol string’i saklanır)
+        var card = new CardData
+        {
+            id = p.id,
+            cardName = p.name,
+            rarity = p.rarity,
 
-        // Dışarı haber ver (isteğe bağlı)
+            baseHP = p.hp,
+            baseDamage = p.str,
+            baseDex = p.dex,          // payload’da yoksa 0 kalır; istersen burada bir başlangıç kuralı uygulayabiliriz
+            dex = p.dex,
+
+            ability = p.ability,
+            passive = p.passive,
+
+            level = 1,
+            xp = 0,
+            skillCooldownMax = 3,
+
+            characterSprite = listSprite,  // UI list görseli
+            characterPrefab3D = null,        // 3D prefabı sahnede Resources’tan yüklenecek
+            prefab = p.prefab          // Örn: "Prefabs3D/AgirZirh_insan3D"
+        };
+
+        // 4) Envantere ekle
+        var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
+        if (inv != null)
+        {
+            inv.AddCard(card);
+            Debug.Log($"[Inventory] eklendi: {card.cardName} ({card.id})");
+        }
+        else
+        {
+            Debug.LogWarning("[QR] PlayerInventory bulunamadı.");
+        }
+
+        // 5) Dışarı haber ver (opsiyonel)
         OnCardReady?.Invoke(card);
     }
 }
