@@ -1,21 +1,20 @@
+using UnityEngine;
+
 public static class CardDataMapper
 {
-    // CardData -> CardDTO
     public static CardDTO ToDTO(CardData c)
     {
-        var dto = new CardDTO
+        return new CardDTO
         {
             id = c.id,
-            name = c.cardName,
-            rarity = c.rarity,
+            cardName = c.cardName,
 
             baseHP = c.baseHP,
             baseDamage = c.baseDamage,
-            baseDex = c.baseDex,
+            baseDex = c.baseDex,   // <-- burasý
+            dex = c.dex,       // <-- burasý
 
-            hp = c.hp,
-            dex = c.dex,
-
+            rarity = c.rarity,
             ability = c.ability,
             passive = c.passive,
 
@@ -23,49 +22,31 @@ public static class CardDataMapper
             xp = c.xp,
             skillCooldownMax = c.skillCooldownMax,
 
-            prefab = c.prefab,
-
             className = c.className,
             race = c.race,
-            combo = c.combo
+            combo = c.combo,
+
+            spritePath = c.characterSprite ? c.characterSprite.name : null,
+            prefabPath = c.prefab
         };
-        return dto;
     }
 
-    // CardDTO -> CardData
-    public static CardData FromDTO(CardDTO dto)
+    public static CardData FromDTO(CardDTO d)
     {
-        var c = new CardData
-        {
-            id = dto.id,
-            cardName = dto.name,
-            rarity = dto.rarity,
+        Sprite sp = null;
+        if (!string.IsNullOrEmpty(d.spritePath))
+            sp = Resources.Load<Sprite>("Characters/" + d.spritePath);
 
-            baseHP = dto.baseHP,
-            baseDamage = dto.baseDamage,
-            baseDex = dto.baseDex,
-
-            // dto.hp/dex yoksa base'e düþ
-            hp = (dto.hp > 0) ? dto.hp : dto.baseHP,
-            dex = (dto.dex > 0) ? dto.dex : dto.baseDex,
-
-            ability = dto.ability,
-            passive = dto.passive,
-
-            level = dto.level,
-            xp = dto.xp,
-            skillCooldownMax = dto.skillCooldownMax,
-
-            prefab = dto.prefab,
-
-            className = dto.className,
-            race = dto.race,
-            combo = dto.combo,
-
-            // runtime'da çözülecek
-            characterSprite = null,
-            characterPrefab3D = null
-        };
-        return c;
+        // yeni yapýcýyý kullanýyoruz (baseDex + dex birlikte)
+        return new CardData(
+            d.id, d.cardName,
+            d.baseHP, d.baseDamage,
+            d.baseDex, d.dex,                 // <-- burasý
+            d.rarity, d.ability, d.passive,
+            d.level, d.xp, d.skillCooldownMax,
+            sp,
+            null,
+            d.prefabPath
+        );
     }
 }

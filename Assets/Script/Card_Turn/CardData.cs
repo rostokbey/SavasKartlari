@@ -1,63 +1,118 @@
 ﻿using UnityEngine;
 
-[System.Serializable]
 public class CardData
 {
-    // Kimlik / temel bilgiler
+    // Kimlik / İsim
     public string id;
     public string cardName;
 
-    // Temel istatistikler (base değerler kayıtta tutulur)
+    // Base istatistikler
     public int baseHP;
     public int baseDamage;
 
-    // Yeni: savunma/dex
-    public int baseDex;
-    public int dex;
+    // DEX: base ve anlık
+    public int baseDex;   // küçük x
+    public int dex;       // küçük x
 
-    // Tanımsal alanlar
-    public string rarity;   // örn: Common/Rare/Legendary...
+    // Diğer özellikler
+    public string rarity;
     public string ability;
     public string passive;
 
-    // İlerleme
-    public int level = 1;
-    public int xp = 0;
-    public int skillCooldownMax = 3;
+    // RPG ilerleme
+    public int level;
+    public int xp;
+    public int skillCooldownMax;
 
-    // Görseller
-    public Sprite characterSprite;     // liste/kart UI sprite
-    public GameObject characterPrefab3D; // sahnede spawn edilecek 3D prefab (isteğe bağlı)
+    // Sınıf/ırk/kombo (opsiyonel)
+    public string className;
+    public string race;
+    public string combo;
 
-    // ÖNEMLİ: 3D prefab yolu (Resources köküne göre)
-    // örn: "Prefabs3D/AgirZirh_insan3D"
-    public string prefab;
+    // Görseller / Prefab’lar
+    public Sprite characterSprite;      // 2D liste görseli
+    public GameObject characterPrefab3D;// sahnede spawn’lanacak 3D prefab (istenirse)
+    public string prefab;               // Resources yolu (örn: "Prefabs3D/AgirZirh_insan3D")
 
+    // ---------------- Constructors ----------------
+
+    /// <summary>
+    /// GERİYE UYUMLU ESKİ SÜRÜM (tek dex parametresi alır)
+    /// </summary>
+    public CardData(
+        string id, string name, int hp, int dmg, int dex,
+        string rarity, string ability, string passive,
+        int level, int xp, int skillCdMax,
+        Sprite sp, GameObject prefab3d, string prefabPath = null)
+    {
+        this.id = id;
+        this.cardName = name;
+
+        this.baseHP = hp;
+        this.baseDamage = dmg;
+
+        this.baseDex = dex; // tek parametre geldiyse ikisine de yaz
+        this.dex = dex;
+
+        this.rarity = rarity;
+        this.ability = ability;
+        this.passive = passive;
+
+        this.level = level;
+        this.xp = xp;
+        this.skillCooldownMax = skillCdMax;
+
+        this.characterSprite = sp;
+        this.characterPrefab3D = prefab3d;
+        this.prefab = prefabPath;
+    }
+
+    /// <summary>
+    /// YENİ SÜRÜM (baseDex + dex birlikte)
+    /// </summary>
+    public CardData(
+        string id, string name, int hp, int dmg, int baseDex, int dex,
+        string rarity, string ability, string passive,
+        int level, int xp, int skillCdMax,
+        Sprite sp, GameObject prefab3d, string prefabPath = null)
+    {
+        this.id = id;
+        this.cardName = name;
+
+        this.baseHP = hp;
+        this.baseDamage = dmg;
+
+        this.baseDex = baseDex;
+        this.dex = dex;
+
+        this.rarity = rarity;
+        this.ability = ability;
+        this.passive = passive;
+
+        this.level = level;
+        this.xp = xp;
+        this.skillCooldownMax = skillCdMax;
+
+        this.characterSprite = sp;
+        this.characterPrefab3D = prefab3d;
+        this.prefab = prefabPath;
+    }
+
+    // Basit kopya (ui/listelerde işine yarar)
     public CardData Clone()
     {
-        return new CardData
+        return new CardData(
+            id, cardName,
+            baseHP, baseDamage,
+            baseDex, dex,
+            rarity, ability, passive,
+            level, xp, skillCooldownMax,
+            characterSprite, characterPrefab3D, prefab
+        )
         {
-            id = id,
-            cardName = cardName,
-
-            baseHP = baseHP,
-            baseDamage = baseDamage,
-
-            baseDex = baseDex,
-            dex = dex,
-
-            rarity = rarity,
-            ability = ability,
-            passive = passive,
-
-            level = level,
-            xp = xp,
-            skillCooldownMax = skillCooldownMax,
-
-            characterSprite = characterSprite,
-            characterPrefab3D = characterPrefab3D,
-
-            prefab = prefab
+            className = this.className,
+            race = this.race,
+            combo = this.combo
         };
     }
 }

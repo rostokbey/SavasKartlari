@@ -1,15 +1,18 @@
-﻿// Dosya adı: CardLevelSystem.cs
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class CardLevelSystem : MonoBehaviour
 {
     public static CardLevelSystem Instance { get; private set; }
 
-    [Header("XP Ayarları")]
-    public int maxLevel = 99;
-    public int duplicateScanXpDefault = 100;
+    [Header("XP / Seviye Ayarları")]
+    [SerializeField] private int maxLevel = 99;
+    [SerializeField] private int baseWinXp = 50;   // kazanma baz XP
+    [SerializeField] private int baseLossXp = 20;  // kaybetme baz XP (ceza büyüklüğü)
+    [SerializeField] private int duplicateScanXpDefault = 100; // aynı kartı tekrar okuma ödülü (istiyorsan kullan)
+    public int DuplicateScanXpDefault => duplicateScanXpDefault;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
         else { Destroy(gameObject); }
@@ -17,75 +20,122 @@ public class CardLevelSystem : MonoBehaviour
 
     // ----------------- Dış API -----------------
 
-    public void AddExperienceByKey(string cardId, int xp)
+    /// <summary> Envanterde id ile kart bulup XP ekler/çıkarır. </summary>
+    public void AddExperienceByKey(string cardId, int xpDelta)
     {
         var inv = PlayerInventory.Instance;
-        if (inv == null) return;
+        if (inv == null || string.IsNullOrEmpty(cardId)) return;
 
         var c = inv.myCards.Find(x => x.id == cardId);
         if (c == null) return;
 
-        AddExperience(c, xp);
+        AddExperience(c, xpDelta);
         inv.SaveToDisk();
     }
 
-    public void AddExperience(CardData c, int xp)
+    /// <summary>
+    /// Kartın XP’sini değiştirir. Pozitifte seviye atlatır, negatifte XP’yi 0’ın altına indirmez
+    /// (de-level yapmıyoruz).
+    /// </summary>
+    public void AddExperience(CardData c, int xpDelta)
     {
         if (c == null) return;
-        if (c.level >= maxLevel) return;
 
-        c.xp += Mathf.Max(0, xp);
+        // Max level ise sadece XP’yi 0’da tut (arttırma yok)
+        if (c.level >= maxLevel && xpDelta >= 0) return;
 
-        while (c.level < maxLevel && c.xp >= XpForNextLevel(c.level))
+        // Negatif ceza: 0’ın altına düşürme, seviye düşürme yok
+        if (xpDelta < 0)
         {
-            c.xp -= XpForNextLevel(c.level);
+            c.xp = Mathf.Max(0, c.xp + xpDelta);
+            return;
+        }
+
+        // Pozitif ilerleme
+        c.xp += xpDelta;
+        while (c.level < maxLevel && c.xp >= XpToNextLevel(c.level))
+        {
+            c.xp -= XpToNextLevel(c.level);
             c.level++;
             ApplyLevelGains(c, c.level);
         }
     }
 
+    /// <summary>
+    /// Kaydedilmiş bir kart yüklendikten sonra (Save/Load) görünür değerleri
+    /// level’e göre yeniden kurmak için.
+    /// </summary>
     public void ApplyToCard(CardData c)
     {
         if (c == null) return;
 
-        // Görünen değerleri base’ten başlayıp, mevcut level’e kadar kazanç ekleyerek kur.
         int hp = c.baseHP;
         int str = c.baseDamage;
-        int dx = (c.dex > 0) ? c.dex : c.baseDex;
+        int dx = (c.baseDex); // temel dex
 
+        // Level 1 taban, 2..level arası her adımın getirisi eklenir
         for (int L = 2; L <= Mathf.Max(1, c.level); L++)
             AddRoleBasedGains(c, L, ref hp, ref str, ref dx);
 
         c.baseHP = hp;
         c.baseDamage = str;
-        c.dex = dx;
+        c.baseDex = dx; // Kart üstünde dex’i baseDEX’te tutuyoruz
     }
 
-    // ----------------- İç Hesaplar -----------------
+    // ----------------- XP eğrisi -----------------
 
-    public int XpForNextLevel(int level)
+    /// <summary>L -> (L+1) için gereken XP.</summary>
+    public int XpToNextLevel(int level)
     {
-        // Basit artan eğri; tablolayabiliriz
+        // float tabanlı; double/float uyumsuzluğu yok
         float v = 100f * Mathf.Pow(1.08f, Mathf.Max(0, level - 1));
         return Mathf.RoundToInt(v);
     }
 
-    public void ApplyLevelGains(CardData c, int targetLevel)
+    // Geriye uyumluluk: projede eski isim kullanıldıysa kırmızı vermesin
+    public int XpForNextLevel(int level) => XpToNextLevel(level);
+
+    // ----------------- Savaş Sonu XP hesapları -----------------
+
+    /// <summary>Kazanınca kart başına verilecek XP (basit zorluk bonusu ile).</summary>
+    public int ComputeWinXp(List<CardData> myUsed, List<CardData> oppUsed)
     {
-        int hp = c.baseHP;
-        int str = c.baseDamage;
-        int dx = (c.dex > 0) ? c.dex : c.baseDex;
+        float myAvg = AvgLevel(myUsed);
+        float oppAvg = AvgLevel(oppUsed);
 
-        AddRoleBasedGains(c, targetLevel, ref hp, ref str, ref dx);
+        // Rakip ortalaması senden yüksekse her seviye farkı için %10 bonus
+        float diff = Mathf.Max(0f, oppAvg - myAvg);
+        float bonusMul = 1f + 0.10f * diff;
 
-        c.baseHP = hp;
-        c.baseDamage = str;
-        c.dex = dx;
+        return Mathf.RoundToInt(baseWinXp * bonusMul);
     }
 
-    enum Role { Tank, Warrior, Mage, Support, Assassin, Unknown }
+    /// <summary>Kaybedince uygulanacak XP (negatif döner). “Kolay” rakibe kaybedersen ceza artar.</summary>
+    public int ComputeLossXp(List<CardData> myUsed, List<CardData> oppUsed)
+    {
+        float myAvg = AvgLevel(myUsed);
+        float oppAvg = AvgLevel(oppUsed);
 
-    Role ResolveRole(CardData c)
+        // Senden düşük rakibe kaybettiğinde her seviye farkı için %10 ekstra ceza
+        float diff = Mathf.Max(0f, myAvg - oppAvg);
+        float penMul = 1f + 0.10f * diff;
+
+        return -Mathf.RoundToInt(baseLossXp * penMul); // negatif
+    }
+
+    private float AvgLevel(List<CardData> list)
+    {
+        if (list == null || list.Count == 0) return 1f;
+        int sum = 0;
+        for (int i = 0; i < list.Count; i++) sum += Mathf.Max(1, list[i].level);
+        return (float)sum / list.Count;
+    }
+
+    // ----------------- Level artışı → stat artışı -----------------
+
+    private enum Role { Tank, Warrior, Mage, Support, Assassin, Unknown }
+
+    private Role ResolveRole(CardData c)
     {
         string n = (c.cardName ?? "").ToLowerInvariant();
         string r = (c.rarity ?? "").ToLowerInvariant();
@@ -100,39 +150,40 @@ public class CardLevelSystem : MonoBehaviour
         return Role.Unknown;
     }
 
-    bool IsLegendaryGroup(CardData c)
+    private bool IsLegendaryGroup(CardData c)
     {
         string r = (c.rarity ?? "").ToLowerInvariant();
         return r.Contains("efsane") || r.Contains("legend") || r.Contains("multi");
     }
 
-    void AddRoleBasedGains(CardData c, int levelStep, ref int hp, ref int str, ref int dex)
+    /// <summary>Her level adımı için rol bazlı artışları ekler.</summary>
+    private void AddRoleBasedGains(CardData c, int levelStep, ref int hp, ref int str, ref int dex)
     {
         var role = ResolveRole(c);
-        bool legendaryGroup = IsLegendaryGroup(c);
+        bool legendary = IsLegendaryGroup(c);
 
         switch (role)
         {
-            case Role.Tank:
-                hp += 14; str += 2; dex += 6; break;
-
-            case Role.Warrior:
-                hp += 10; str += 8; dex += 2; break;
-
-            case Role.Mage:
-                hp += 10; str += 6; dex += 4; break;
-
-            case Role.Support:
-                hp += 10; str += 3; dex += 3; break;
-
-            case Role.Assassin:
-                hp += 10;
-                str += legendaryGroup ? 11 : 9;
-                dex += legendaryGroup ? 2 : 1;
-                break;
-
-            default:
-                hp += 10; str += 5; dex += 2; break;
+            case Role.Tank: hp += 14; str += 2; dex += 6; break;
+            case Role.Warrior: hp += 10; str += 8; dex += 2; break;
+            case Role.Mage: hp += 10; str += 6; dex += 4; break;
+            case Role.Support: hp += 10; str += 3; dex += 3; break;
+            case Role.Assassin: hp += 10; str += (legendary ? 11 : 9); dex += (legendary ? 2 : 1); break;
+            default: hp += 10; str += 5; dex += 2; break; // güvenli varsayılan
         }
+    }
+
+    /// <summary>Seviye atladığında tek adımın getirilerini uygular.</summary>
+    public void ApplyLevelGains(CardData c, int targetLevel)
+    {
+        int hp = c.baseHP;
+        int str = c.baseDamage;
+        int dx = c.baseDex;
+
+        AddRoleBasedGains(c, targetLevel, ref hp, ref str, ref dx);
+
+        c.baseHP = hp;
+        c.baseDamage = str;
+        c.baseDex = dx;
     }
 }

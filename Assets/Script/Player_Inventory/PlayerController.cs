@@ -29,16 +29,18 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     public void PerformSkillAttackServerRpc()
     {
-        var card = GetComponent<PlayerInventory>()?.GetActiveCard();
         var inventory = GetComponent<PlayerInventory>();
+        var card = inventory?.GetActiveCard();   // aktif kartý al
 
-        if (card == null || !inventory.CanUseSkill()) return;
+        if (card == null || !inventory.CanUseSkill(card))   // <-- parametre ver
+            return;
 
-        Debug.Log("Skill kullanýldý: " + card.ability);
+        Debug.Log($"Skill kullanýldý: {card.ability}");
         BattleManager.Instance.SendSkillAttackServerRpc(card.ability);
-        inventory.ResetSkillCooldown();
-        PerformSkillAttackClientRpc(card.ability);
+
+        inventory.ResetSkillCooldown(card);                 // <-- parametre ver
     }
+
 
     [ClientRpc]
     private void PerformSkillAttackClientRpc(string ability)

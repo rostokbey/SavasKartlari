@@ -1,3 +1,6 @@
+// CardXpDelta.cs
+using UnityEngine;
+
 public struct CardXpDelta
 {
     public CardData card;

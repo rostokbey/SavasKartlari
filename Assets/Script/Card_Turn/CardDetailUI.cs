@@ -19,7 +19,7 @@ public class CardDetailUI : MonoBehaviour
         nameText.text = card.cardName.Replace("_", " ");
         hpText.text = "HP: " + card.baseHP;
         strText.text = "STR: " + card.baseDamage;
-        dexText.text = "DEX: " + card.baseDEX;
+        dexText.text = "DEX: " + card.baseDex;
         rarityText.text = "Rarity: " + card.rarity;
         abilityText.text = "Ability: " + card.ability;
         passiveText.text = "Passive: " + card.passive;

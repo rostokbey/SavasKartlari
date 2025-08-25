@@ -61,7 +61,7 @@ public class CardUI : MonoBehaviour
         if (damageText) damageText.text = "STR: " + data.baseDamage;
         if (levelText) levelText.text = "Lv: " + data.level;
         if (xpText) xpText.text = "XP: " + data.xp + "/100";
-        if (dexText) dexText.text = "DEX: " + data.baseDEX;
+        if (dexText) dexText.text = "DEX: " + data.baseDex;
 
         if (characterImage) characterImage.sprite = data.characterSprite;
 

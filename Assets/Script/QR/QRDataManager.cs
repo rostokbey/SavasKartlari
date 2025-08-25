@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class QRDataManager : MonoBehaviour
 {
@@ -8,11 +9,11 @@ public class QRDataManager : MonoBehaviour
 
     [Header("Preview UI (opsiyonel)")]
     public Image characterImage;
-    public TextMeshProUGUI nameText, hpText, strText, dexText, abilityText, passiveText;
+    public TextMeshProUGUI nameText, hpText, strText, abilityText, passiveText;
     public Sprite defaultListSprite;
 
-    /// Kart hazır olduğunda dışarı bildirmek için (opsiyonel)
-    public static System.Action<CardData> OnCardReady;
+    // Kart hazır olduğunda dışarı bildirmek için (opsiyonel)
+    public static Action<CardData> OnCardReady;
 
     void Awake() => Instance = this;
 
@@ -27,10 +28,10 @@ public class QRDataManager : MonoBehaviour
             return;
         }
 
-        // 1) JWT’yi çöz (imza doğrulama DEV’de kapalı olabilir)
-        if (!JwtCardVerifier.TryParse(jwtText, out var p, out var err))
+        // 1) JWT’yi çöz (imza doğrulama şimdilik kapalı olabilir)
+        if (!JwtCardVerifier.TryParse(jwtText, out var p, out string err))
         {
-            Debug.LogError("[QR] JWT doğrulama hatası: " + err);
+            Debug.LogError("[QR] JWT çözümleme hatası: " + err);
             return;
         }
 
@@ -38,58 +39,46 @@ public class QRDataManager : MonoBehaviour
         if (nameText) nameText.text = p.name?.Replace("_", " ") ?? "";
         if (hpText) hpText.text = "HP: " + p.hp;
         if (strText) strText.text = "STR: " + p.str;
-        if (dexText) dexText.text = "DEX: " + p.dex;         // Tokenında yoksa 0/varsayılan döner
         if (abilityText) abilityText.text = "Ability: " + p.ability;
         if (passiveText) passiveText.text = "Passive: " + p.passive;
 
-        // Liste görseli (Characters/NAME ya da CardArtResolver iç mantığın)
-        var listSprite = CardArtResolver.GetSprite(
-            new CardData { cardName = p.name },
-            defaultListSprite
+        // 3) Liste görseli: Resources/Characters/{ad} dene, yoksa default
+        Sprite listSprite = null;
+        if (!string.IsNullOrEmpty(p.name))
+            listSprite = Resources.Load<Sprite>("Characters/" + p.name);
+        if (!listSprite) listSprite = defaultListSprite;
+        if (characterImage) characterImage.sprite = listSprite;
+
+        // 4) CardData oluştur (yeni yapıcı: baseDex + dex)
+        // Not: payload’da dex yoksa 0 bırakıyoruz; eğer eklediysen p.dex’i yazabilirsin.
+        int baseDex = 0, dex = 0;
+
+        var card = new CardData(
+            p.id, p.name,
+            p.hp, p.str,
+            baseDex, dex,
+            p.rarity, p.ability, p.passive,
+            1,           // level
+            0,           // xp
+            3,           // skillCooldownMax (starter)
+            listSprite,
+            null,        // 3D prefab sahnede yüklenecekse burada null bırak
+            p.prefab     // Resources yolu (ör: "Prefabs3D/AgirZirh_insan3D")
         );
-        if (characterImage)
-        {
-            characterImage.sprite = listSprite != null ? listSprite : defaultListSprite;
-            characterImage.enabled = (characterImage.sprite != null);
-        }
 
-        // 3) CardData oluştur (prefab YÜKLEME! sadece yol string’i saklanır)
-        var card = new CardData
-        {
-            id = p.id,
-            cardName = p.name,
-            rarity = p.rarity,
-
-            baseHP = p.hp,
-            baseDamage = p.str,
-            baseDex = p.dex,          // payload’da yoksa 0 kalır; istersen burada bir başlangıç kuralı uygulayabiliriz
-            dex = p.dex,
-
-            ability = p.ability,
-            passive = p.passive,
-
-            level = 1,
-            xp = 0,
-            skillCooldownMax = 3,
-
-            characterSprite = listSprite,  // UI list görseli
-            characterPrefab3D = null,        // 3D prefabı sahnede Resources’tan yüklenecek
-            prefab = p.prefab          // Örn: "Prefabs3D/AgirZirh_insan3D"
-        };
-
-        // 4) Envantere ekle
+        // 5) Envantere ekle
         var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
         if (inv != null)
         {
             inv.AddCard(card);
-            Debug.Log($"[Inventory] eklendi: {card.cardName} ({card.id})");
+            Debug.Log($"[QR] Envantere eklendi: {card.cardName} ({card.id})");
         }
         else
         {
             Debug.LogWarning("[QR] PlayerInventory bulunamadı.");
         }
 
-        // 5) Dışarı haber ver (opsiyonel)
+        // 6) Dışarı haber ver (opsiyonel)
         OnCardReady?.Invoke(card);
     }
 }
