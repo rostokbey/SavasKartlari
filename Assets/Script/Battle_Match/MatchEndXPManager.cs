@@ -17,16 +17,21 @@ public class MatchEndXPManager : MonoBehaviour
             ? cls.ComputeWinXp(myUsed, oppUsed)      // pozitif
             : cls.ComputeLossXp(myUsed, oppUsed);    // negatif
 
+        // XP dağıtımı
         foreach (var c in myUsed)
         {
             cls.AddExperience(c, delta);
-            Debug.Log($"[XP] {c.cardName} ({c.id}) → ΔXP: {delta}, L:{c.level}, XP:{c.xp}/{cls.XpToNextLevel(c.level)}");
+            Debug.Log($"[XP] {c.cardName} → Δ:{delta}, L:{c.level}, XP:{c.xp}/{cls.XpToNextLevel(c.level)}");
         }
 
-        // İstersen burada sonucu UI’a bildir (popup vs.)
-        // MatchResultUI.Show(myTeamWon, ...);
-    }
+        // Sezon puanı (yalnızca sezon maçında, 1 kez)
+        if (MatchStarter.LastMatchWasSeason)
+        {
+            int teamSize = MatchStarter.LastMatchTeamSize > 0 ? MatchStarter.LastMatchTeamSize : 1;
+            SeasonManager.Instance?.OnMatchFinished(myTeamWon, teamSize);
+        }
 
+    }
     /// <summary>Geriye uyumluluk: eski kod sadece iki parametre ile çağırıyorsa.</summary>
     public void GrantMatchRewards(bool myTeamWon, List<CardData> myUsed)
     {
