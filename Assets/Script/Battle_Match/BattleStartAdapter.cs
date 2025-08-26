@@ -1,54 +1,120 @@
-using System;
+ï»¿using System;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Var olan StartBattleManager (veya benzeri) üzerindeki
-/// gerçek baþlatma metodunu çaðýrmak için küçük bir köprü.
-/// Inspector’dan hedef script’i ve metod adýný giriyorsun.
+/// Tek kapÄ±: Casual/Season bayraÄŸÄ±nÄ± set eder ve mevcut StartBattleManager (veya benzeri)
+/// Ã¼zerindeki gerÃ§ek baÅŸlatma metodunu Ã§aÄŸÄ±rÄ±r. methodName boÅŸsa yaygÄ±n isimleri otomatik dener.
+/// Inspector atamasÄ± yapmadan da derlenir; target yoksa sadece log basar / opsiyonel sahne fallback.
 /// </summary>
 public class BattleStartAdapter : MonoBehaviour
 {
-    [Header("Hedef")]
-    [Tooltip("StartBattleManager script’inin olduðu Component’i sürükle.")]
-    public MonoBehaviour target;     // örn: StartBattleManager
+    [Header("Hedef (mevcut baÅŸlatÄ±cÄ±)")]
+    [Tooltip("StartBattleManager script'inin baÄŸlÄ± olduÄŸu component (boÅŸ bÄ±rakÄ±labilir; sadece log basar).")]
+    public MonoBehaviour target;  // Ã¶rn: StartBattleManager
 
-    [Tooltip("Çaðrýlacak metod adý (örn: StartBattle, BeginMatch, GoBattleScene)")]
-    public string methodName = "StartBattle";
+    [Header("Ã‡aÄŸrÄ±lacak metod")]
+    [Tooltip("BilmiyorsanÄ±z boÅŸ bÄ±rakÄ±n; otomatik keÅŸif dener (StartBattle/StartMatch/BeginMatch/GoBattleScene/StartGame/Play).")]
+    public string methodName = "";
 
-    public enum CallMode { NoArg, IntTeamSize }
-    [Tooltip("Metod int (teamSize) alýyor mu? Yoksa argsýz mý?")]
-    public CallMode callMode = CallMode.NoArg;
+    public enum CallMode { Auto, NoArg, IntTeamSize }
+    [Tooltip("Auto: Ã¶nce int parametreli, sonra argsÄ±z dener.")]
+    public CallMode callMode = CallMode.Auto;
 
-    /// <summary> Dýþarýdan çaðýr: takým boyutuyla ya da argsýz. </summary>
-    public void StartMatch(int teamSize)
+    [Header("Opsiyonel sahne fallback'i")]
+    [Tooltip("Hedef metod bulunamazsa bu sahne yÃ¼klenir (boÅŸsa atlanÄ±r).")]
+    public string fallbackSceneName = "";
+
+    // ------------ BUTONLARIN / DIÅž Ã‡AÄžRILARIN KULLANACAÄžI TEK METOT ------------
+    public void StartMatch(int teamSize, bool seasonMode)
     {
-        if (target == null || string.IsNullOrEmpty(methodName))
+        // 1) BaÄŸlam bayraklarÄ±
+        MatchContext.LastMatchWasSeason = seasonMode;
+        MatchContext.LastMatchTeamSize = Mathf.Clamp(teamSize, 1, 3);
+
+        // 2) Sezon elenme kapÄ±sÄ±
+        if (seasonMode && SeasonManager.Instance?.IsEliminated() == true)
         {
-            Debug.LogError("[BattleStartAdapter] target/metod atanmadý.");
+            Debug.LogWarning("[BattleStartAdapter] Bu sezon elendiniz (puan=0).");
             return;
         }
 
+        // 3) GerÃ§ek baÅŸlatÄ±cÄ±yÄ± Ã§aÄŸÄ±rmayÄ± dene
+        bool invoked = InvokeTarget(MatchContext.LastMatchTeamSize);
+
+        // 4) Olmazsa opsiyonel fallback sahnesi
+        if (!invoked && !string.IsNullOrEmpty(fallbackSceneName))
+        {
+            Debug.Log($"[BattleStartAdapter] Fallback: LoadScene({fallbackSceneName})");
+            SceneManager.LoadScene(fallbackSceneName);
+            invoked = true;
+        }
+
+        if (!invoked)
+            Debug.LogError("[BattleStartAdapter] Hedef metod bulunamadÄ±. (target/metodName/callMode kontrol edin)");
+
+        Debug.Log($"[BattleStartAdapter] Start â†’ teamSize={MatchContext.LastMatchTeamSize}, season={MatchContext.LastMatchWasSeason}");
+    }
+
+    // -------- Tek parametreli sarmalayÄ±cÄ±lar (Unity Button iÃ§in) --------
+    public void StartCasual(int teamSize) => StartMatch(teamSize, false);
+    public void StartSeason(int teamSize) => StartMatch(teamSize, true);
+
+    // Parametresiz kÄ±sa yollar (istersen kullan)
+    public void StartCasual1v1() { StartMatch(1, false); }
+    public void StartSeason1v1() { StartMatch(1, true); }
+    public void StartSeason2v2() { StartMatch(2, true); }
+    public void StartSeason3v3() { StartMatch(3, true); }
+
+    // --------------------------- Ä°Ã§ yardÄ±mcÄ± ---------------------------
+    bool InvokeTarget(int teamSize)
+    {
+        if (target == null)
+        {
+            Debug.LogWarning("[BattleStartAdapter] target atanmadÄ±; sadece baÄŸlam set edildi.");
+            return false;
+        }
+
         var t = target.GetType();
+        string[] candidates = string.IsNullOrWhiteSpace(methodName)
+            ? new[] { "StartBattle", "StartMatch", "BeginMatch", "GoBattleScene", "StartGame", "Play" }
+            : new[] { methodName };
+
         try
         {
-            if (callMode == CallMode.IntTeamSize)
+            if (callMode == CallMode.IntTeamSize || callMode == CallMode.Auto)
             {
-                var m = t.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(int) }, null);
-                if (m != null) { m.Invoke(target, new object[] { teamSize }); return; }
+                foreach (var name in candidates)
+                {
+                    var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                                        binder: null, types: new Type[] { typeof(int) }, modifiers: null);
+                    if (m != null) { m.Invoke(target, new object[] { teamSize }); return true; }
+                }
             }
 
-            // argsýz dene
+            if (callMode == CallMode.NoArg || callMode == CallMode.Auto)
             {
-                var m = t.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
-                if (m != null) { m.Invoke(target, null); return; }
+                foreach (var name in candidates)
+                {
+                    var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                                        binder: null, types: Type.EmptyTypes, modifiers: null);
+                    if (m != null) { m.Invoke(target, null); return true; }
+                }
             }
-
-            Debug.LogError($"[BattleStartAdapter] {t.Name} içinde '{methodName}' bulunamadý. (int parametreli ya da argsýz)");
         }
         catch (Exception e)
         {
-            Debug.LogError($"[BattleStartAdapter] çaðrý hatasý: {e.Message}");
+            Debug.LogError($"[BattleStartAdapter] Ã§aÄŸrÄ± hatasÄ±: {e.Message}");
         }
+
+        return false;
     }
+}
+
+/// <summary> MaÃ§ baÄŸlamÄ± (maÃ§ sonu akÄ±ÅŸlar burada season/casual ve takÄ±m boyutunu okur). </summary>
+public static class MatchContext
+{
+    public static bool LastMatchWasSeason { get; set; }
+    public static int LastMatchTeamSize { get; set; }
 }

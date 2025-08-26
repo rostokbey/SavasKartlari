@@ -38,7 +38,7 @@ public class MatchStarter : MonoBehaviour
             return;
         }
 
-        adapter.StartMatch(LastMatchTeamSize); // gerçek çağrı burada
+        adapter.StartMatch(LastMatchTeamSize, LastMatchWasSeason);
         Debug.Log($"[MatchStarter] Start → teamSize={LastMatchTeamSize}, season={LastMatchWasSeason}");
     }
 }

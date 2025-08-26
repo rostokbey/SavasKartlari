@@ -1,6 +1,6 @@
-// CardXpDelta.cs
 using UnityEngine;
 
+[System.Serializable]
 public struct CardXpDelta
 {
     public CardData card;
