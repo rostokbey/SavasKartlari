@@ -1,29 +1,23 @@
 using UnityEngine;
-using TMPro;
 using System.Text;
 
-public class SeasonStandingsUI : MonoBehaviour
+public class SeasonStandingUI : MonoBehaviour
 {
-    public TMP_Text standingsText;
-
-    public void Refresh()
+    [ContextMenu("Print Top 10 To Console")]
+    public void PrintTop10()
     {
-        var sm = SeasonManager.Instance;
-        if (sm == null || standingsText == null) return;
-
-        var list = sm.BuildStandings();
+        var top = SeasonRepository.GetTop(10);
         var sb = new StringBuilder();
+        sb.AppendLine("==== Top 10 ====");
+        for (int i = 0; i < top.Count; i++)
+            sb.AppendLine($"{i + 1}. {top[i].displayName} — {top[i].points}p (W:{top[i].wins} / L:{top[i].losses})");
+        Debug.Log(sb.ToString());
 
-        int max = Mathf.Min(10, list.Count);
-        for (int i = 0; i < max; i++)
+        var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
+        if (inv != null)
         {
-            var s = list[i];
-            sb.AppendLine(
-                $"{i + 1}. {s.profileId} — {s.points}p  (W{s.wins}/L{s.losses})  M:{s.medals} K:{s.cups} Y:{s.stars}"
-            );
+            int myRank = SeasonRepository.GetRank(inv.CurrentProfileId ?? "DEFAULT");
+            Debug.Log($"[Season] Benim sýram: {myRank}");
         }
-        standingsText.text = sb.Length > 0 ? sb.ToString() : "Henüz kayýt yok.";
     }
-
-    void OnEnable() => Refresh();
 }

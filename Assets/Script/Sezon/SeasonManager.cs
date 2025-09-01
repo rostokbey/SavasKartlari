@@ -1,307 +1,98 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿// Assets/Script/Sezon/SeasonManager.cs
 using UnityEngine;
+using System;
 
-/// <summary>
-/// 3 haftalık sezon, puan akışı ve ödüller:
-/// * Start: 1000 puan
-/// * Win +50, Loss -25
-/// * 3+ loss streak → ekstra ceza (loss çarpanı)
-/// * Puan 0 → sezon için ELENİR
-/// * Sezon sonunda SADECE 1.'ye madalya (5 madalya=1 kupa, 5 kupa=1 yıldız)
-/// </summary>
 public class SeasonManager : MonoBehaviour
 {
     public static SeasonManager Instance { get; private set; }
 
-    [Header("Sezon Süresi")]
-    [SerializeField] private int seasonDurationDays = 21;  // 3 hafta
-
     [Header("Puan Kuralları")]
-    [SerializeField] private int startPoints = 500;
-    [SerializeField] private int winDelta = 50;
-    [SerializeField] private int lossDelta = -25;
+    [SerializeField] private int startPoints = 500;   
+    public int StartPoints => startPoints;            
+    [SerializeField] int winPoints = 50;
+    [SerializeField] int lossPoints = 25;
 
-    [Header("Loss Streak Cezası")]
-    [SerializeField] private int lossStreakThreshold = 3;    // 3. yenilgiden itibaren
-    [SerializeField] private float lossStreakPenaltyMultiplier = 2f;   // kayıp ×2
-
-    [Header("Sezon Kimliği")]
-    [SerializeField] private string seasonId = "S1";
-
-    [Header("Durum (Debug)")]
-    [SerializeField] private DateTime seasonStartUtc;
-    [SerializeField] private DateTime seasonEndUtc;
-
-    private Dictionary<string, PlayerSeasonState> stateByProfile = new Dictionary<string, PlayerSeasonState>();
-
-    private void Awake()
+    void Awake()
     {
-        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
+        if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
-
-        if (seasonStartUtc == default)
-        {
-            seasonStartUtc = DateTime.UtcNow;
-            seasonEndUtc = seasonStartUtc.AddDays(seasonDurationDays);
-        }
-        LoadSeason();
+        DontDestroyOnLoad(gameObject);
     }
 
-    // ---------------------------------------------------------------------
-    // Dış API
-    // ---------------------------------------------------------------------
-
-    public void StartNewSeason(string newSeasonId = null)
+    // Maç bittiğinde MatchEndXPManager burayı çağırıyor
+    public void OnMatchFinished(bool myTeamWon, int teamSize)
     {
-        if (!string.IsNullOrEmpty(newSeasonId))
-            seasonId = newSeasonId;
+        var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
+        if (inv == null) { Debug.LogWarning("[Season] PlayerInventory yok."); return; }
 
-        seasonStartUtc = DateTime.UtcNow;
-        seasonEndUtc = seasonStartUtc.AddDays(seasonDurationDays);
-        stateByProfile.Clear();
-        SaveSeason();
+        string pid = inv.CurrentProfileId ?? "DEFAULT";
 
-        Debug.Log($"[Season] Yeni sezon başladı: {seasonId}  ({seasonStartUtc:u} → {seasonEndUtc:u})");
-    }
-
-    /// <summary>
-    /// Maç bitişinde çağır. myTeamWon: kazandın mı? teamSize: 1/2/3 (şimdilik puanı etkilemiyor).
-    /// Puanı 0 olan (elenmiş) oyuncu yeni maçta puan alamaz.
-    /// </summary>
-    public void OnMatchFinished(bool myTeamWon, int teamSize = 1)
-    {
-        string pid = EnsureProfile();
-        var st = GetOrCreate(pid);
-
-        if (st.isEliminated)
+        // PlayerInventory'de PlayerName yoksa profileId kullan
+        string displayName = pid;
+        try
         {
-            Debug.Log($"[Season] {pid} elenmiş, maç sonucu işlenmedi.");
-            return;
+            var pi = inv.GetType().GetProperty("PlayerName");
+            if (pi != null && pi.PropertyType == typeof(string))
+            {
+                var v = (string)pi.GetValue(inv, null);
+                if (!string.IsNullOrWhiteSpace(v)) displayName = v;
+            }
         }
+        catch { /* yoksay */ }
 
-        int delta = myTeamWon ? winDelta : lossDelta;
+        var entry = SeasonRepository.EnsureEntry(pid, displayName);
 
         if (myTeamWon)
         {
-            st.lossStreak = 0; // streak sıfırla
+            entry.points += winPoints;
+            entry.wins++;
+            entry.consecutiveWins++;
+            entry.consecutiveLosses = 0;
         }
         else
         {
-            st.lossStreak++;
-            if (st.lossStreak >= lossStreakThreshold)
-            {
-                // ek ceza: lossDelta negatif olduğu için mutlak değeri büyüt
-                delta = Mathf.RoundToInt(delta * lossStreakPenaltyMultiplier);
-            }
+            int penalty = lossPoints;
+            entry.losses++;
+            entry.consecutiveLosses++;
+            entry.consecutiveWins = 0;
+
+            // 3. ardışık yenilgide 2x ceza
+            if (entry.consecutiveLosses >= 3) penalty *= 2;
+
+            entry.points = Mathf.Max(0, entry.points - penalty);
         }
 
-        st.points = Mathf.Max(0, st.points + delta);
-        st.totalMatches++;
-        if (myTeamWon) st.wins++; else st.losses++;
-
-        // 0'a düşerse elenir
-        if (st.points <= 0)
-        {
-            st.points = 0;
-            st.isEliminated = true;
-            Debug.Log($"[Season] {pid} ELENDİ (puan=0).");
-        }
-
-        stateByProfile[pid] = st;
-        SaveSeason();
-
-        Debug.Log($"[Season] {pid} → {(delta >= 0 ? "+" : "")}{delta}  (Toplam: {st.points}, LS:{st.lossStreak})");
+        SeasonRepository.Upsert(entry);
     }
 
-    /// <summary>
-    /// Sezon biter: yalnızca 1.'ye madalya ver; 5 madalya=1 kupa, 5 kupa=1 yıldız.
-    /// </summary>
-    public List<PlayerSeasonState> EndSeasonAndDistributeRewards()
-    {
-        var standings = BuildStandings();
-
-        if (standings.Count > 0)
-        {
-            standings[0].medals++;
-            Consolidate(standings[0]);
-            Debug.Log($"[Season] 1.si: {standings[0].profileId} → +1 madalya (M:{standings[0].medals} K:{standings[0].cups} Y:{standings[0].stars})");
-        }
-
-        // 2. ve 3.'ye artık ödül yok
-
-        foreach (var s in standings)
-            stateByProfile[s.profileId] = s;
-
-        SaveSeason();
-        return standings;
-    }
-
-    /// <summary>Aktif profil puanı.</summary>
+    // --- UI scriptlerinin beklediği yardımcılar ---
+    public bool IsEliminated() => false;                 // şimdilik eleme yok
     public int GetMyPoints()
     {
-        var pid = EnsureProfile();
-        return GetOrCreate(pid).points;
+        var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
+        var e = SeasonRepository.GetEntry(inv?.CurrentProfileId ?? "DEFAULT");
+        return e != null ? e.points : startPoints;
     }
-
-    /// <summary>Oyuncu elenmiş mi?</summary>
-    public bool IsEliminated(string profileId = null)
-    {
-        var pid = profileId ?? EnsureProfile();
-        return GetOrCreate(pid).isEliminated;
-    }
-
-    /// <summary>Basit sıralama (puan desc, sonra wins, sonra totalMatches).</summary>
-    public List<PlayerSeasonState> BuildStandings()
-    {
-        var list = new List<PlayerSeasonState>(stateByProfile.Values);
-        list.Sort((a, b) =>
-        {
-            int cmp = b.points.CompareTo(a.points);
-            if (cmp != 0) return cmp;
-            cmp = b.wins.CompareTo(a.wins);
-            if (cmp != 0) return cmp;
-            return b.totalMatches.CompareTo(a.totalMatches);
-        });
-        return list;
-    }
-
-    // ---------------------------------------------------------------------
-    // İç
-    // ---------------------------------------------------------------------
-
-    private string EnsureProfile()
+    public int GetMyWinStreak()
     {
         var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
-        string pid = (inv != null && !string.IsNullOrEmpty(inv.CurrentProfileId)) ? inv.CurrentProfileId : "DEFAULT";
-        return pid;
+        var e = SeasonRepository.GetEntry(inv?.CurrentProfileId ?? "DEFAULT");
+        return e != null ? e.consecutiveWins : 0;
     }
-
-    private PlayerSeasonState GetOrCreate(string profileId)
-    {
-        if (!stateByProfile.TryGetValue(profileId, out var st))
-        {
-            st = new PlayerSeasonState
-            {
-                profileId = profileId,
-                points = startPoints,
-                wins = 0,
-                losses = 0,
-                totalMatches = 0,
-                medals = 0,
-                cups = 0,
-                stars = 0,
-                lossStreak = 0,
-                isEliminated = false
-            };
-            stateByProfile[profileId] = st;
-        }
-        return st;
-    }
-
-    // 5 madalya -> 1 kupa; 5 kupa -> 1 yıldız
-    private void Consolidate(PlayerSeasonState st)
-    {
-        if (st.medals >= 5)
-        {
-            st.cups += st.medals / 5;
-            st.medals = st.medals % 5;
-        }
-        if (st.cups >= 5)
-        {
-            st.stars += st.cups / 5;
-            st.cups = st.cups % 5;
-        }
-    }
-
-    private string SeasonPath()
-    {
-        var dir = Application.persistentDataPath;
-        return Path.Combine(dir, $"season_{seasonId}.json");
-    }
-
-    private void SaveSeason()
-    {
-        var data = new SeasonSaveData
-        {
-            seasonId = seasonId,
-            seasonStartUtc = seasonStartUtc.ToUniversalTime().Ticks,
-            seasonEndUtc = seasonEndUtc.ToUniversalTime().Ticks,
-            players = new List<PlayerSeasonState>(stateByProfile.Values)
-        };
-
-        string json = JsonUtility.ToJson(data);
-        File.WriteAllText(SeasonPath(), json, Encoding.UTF8);
-    }
-
-    private void LoadSeason()
-    {
-        var path = SeasonPath();
-        if (!File.Exists(path))
-        {
-            GetOrCreate(EnsureProfile());
-            SaveSeason();
-            return;
-        }
-
-        var json = File.ReadAllText(path, Encoding.UTF8);
-        var data = JsonUtility.FromJson<SeasonSaveData>(json);
-        stateByProfile.Clear();
-
-        if (data != null)
-        {
-            seasonId = data.seasonId ?? seasonId;
-            if (data.seasonStartUtc > 0) seasonStartUtc = new DateTime(data.seasonStartUtc, DateTimeKind.Utc);
-            if (data.seasonEndUtc > 0) seasonEndUtc = new DateTime(data.seasonEndUtc, DateTimeKind.Utc);
-
-            if (data.players != null)
-                foreach (var p in data.players)
-                    stateByProfile[p.profileId] = p;
-        }
-    }
-
     public int GetMyLossStreak()
     {
-        var pid = EnsureProfile();
-        return GetOrCreate(pid).lossStreak;
+        var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
+        var e = SeasonRepository.GetEntry(inv?.CurrentProfileId ?? "DEFAULT");
+        return e != null ? e.consecutiveLosses : 0;
     }
 
-    public TimeSpan GetTimeLeft()
-    {
-        return seasonEndUtc.ToUniversalTime() - DateTime.UtcNow;
-    }
+    // HUD TimeSpan beklediği için TimeSpan döndürelim
+    public TimeSpan GetTimeLeft() => TimeSpan.Zero;
 
-    // (UI’da tarih istemezsen şart değil ama işine yarar)
-    public DateTime SeasonEndUtc => seasonEndUtc;
+    // Sezon bitir/başlat
+    public void StartNewSeason() => SeasonSettlement.ForceSettle();
 
-}
-
-// ---------------- DTO'lar ----------------
-
-[Serializable]
-public class SeasonSaveData
-{
-    public string seasonId;
-    public long seasonStartUtc;
-    public long seasonEndUtc;
-    public List<PlayerSeasonState> players = new List<PlayerSeasonState>();
-}
-
-[Serializable]
-public class PlayerSeasonState
-{
-    public string profileId;
-    public int points;
-    public int wins;
-    public int losses;
-    public int totalMatches;
-
-    public int medals;
-    public int cups;
-    public int stars;
-
-    public int lossStreak;    // arka arkaya kayıp sayısı
-    public bool isEliminated;  // puan 0'a düştü mü?
+    // UI Button üzerinden yanlışlıkla parametreli çağrılar için overload’lar:
+    public void StartNewSeason(int _) => StartNewSeason();
+    public void StartNewSeason(string _) => StartNewSeason();
 }

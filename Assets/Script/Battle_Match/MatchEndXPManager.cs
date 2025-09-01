@@ -63,6 +63,7 @@ public class MatchEndXPManager : MonoBehaviour
         }
 
         // Sonuç UI
-        FindObjectOfType<MatchResultUI>(true)?.Show();
+       
+        MatchResultUI.Show();
     }
 }
