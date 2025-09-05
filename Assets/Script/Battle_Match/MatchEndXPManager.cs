@@ -1,6 +1,7 @@
 ﻿// Assets/Script/Battle_Match/MatchEndXPManager.cs
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MatchEndXPManager : MonoBehaviour
 {
@@ -62,8 +63,9 @@ public class MatchEndXPManager : MonoBehaviour
             SeasonManager.Instance?.OnMatchFinished(myTeamWon, teamSize);
         }
 
-        // Sonuç UI
-       
-        MatchResultUI.Show();
+        if (SceneManager.GetActiveScene().name == "BattleScene")
+        {
+            MatchResultUI.Show();
+        }
     }
 }

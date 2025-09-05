@@ -34,4 +34,4 @@ public class LocalLogin : MonoBehaviour
         inv.SaveToDisk(pid);
         Debug.Log($"[LocalLogin] Envanter kaydedildi. (profil={pid})");
     }
-}
+}

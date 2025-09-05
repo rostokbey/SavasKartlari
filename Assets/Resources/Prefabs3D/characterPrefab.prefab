@@ -142,22 +142,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16c70eeea3e1bca44bed8236f5f65a05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardData:
-    id: 
-    cardName: 
-    className: 
-    race: 
-    combo: 
-    baseHP: 0
-    baseDamage: 0
-    rarity: 
-    ability: 
-    passive: 
-    level: 0
-    xp: 0
-    skillCooldownMax: 0
-    dex: 0
-    characterSprite: {fileID: 0}
-    characterPrefab3D: {fileID: 0}
+  maxHp: 0
   hp: 0
+  defense: 0
   isMyTurn: 0
+  animator: {fileID: 0}

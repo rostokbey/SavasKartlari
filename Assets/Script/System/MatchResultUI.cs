@@ -18,16 +18,22 @@ public class MatchResultUI : MonoBehaviour
     readonly Color32 colBg = new Color32(0, 0, 0, 170);
     readonly Color32 colPanel = new Color32(30, 30, 30, 240);
     readonly Color32 colText = new Color32(240, 240, 240, 255);
-    readonly Color32 colWin = new Color32(52, 199, 89, 255);   // yeşil
-    readonly Color32 colLose = new Color32(255, 69, 58, 255);  // kırmızı
+    readonly Color32 colWin = new Color32(52, 199, 89, 255);
+    readonly Color32 colLose = new Color32(255, 69, 58, 255);
     readonly Color32 colSub = new Color32(200, 200, 200, 200);
 
     void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
         gameObject.name = "MatchResultUI_Runtime";
-        BuildUI();
+
+        // ⚠️ BuildUI()'i AWAKEDE ÇAĞIRMA - sadece Show()'da oluştur
+        // BuildUI(); // BU SATIRI SİL VEYA YORUM YAP
     }
 
     void OnDestroy()
@@ -41,12 +47,12 @@ public class MatchResultUI : MonoBehaviour
         if (Instance == null)
         {
             var go = new GameObject("MatchResultUI_Runtime");
-            go.AddComponent<MatchResultUI>();
+            Instance = go.AddComponent<MatchResultUI>();
+            Instance.BuildUI(); // ⚠️ UI'ı SADECE BURADA oluştur
         }
         Instance.RefreshAndOpen();
     }
 
-    // --------------------------------------------------------------------
     // UI inşası (tamamen kod)
     void BuildUI()
     {
@@ -79,6 +85,8 @@ public class MatchResultUI : MonoBehaviour
         var scroll = CreateScroll(panel, out _content);
         // Footer
         _footer = CreateUIRect(panel, "Footer", sizeDelta: new Vector2(0, 64));
+        _footer.gameObject.SetActive(false);   // ← Ekledik
+
         var h = _footer.gameObject.AddComponent<HorizontalLayoutGroup>();
         h.childAlignment = TextAnchor.MiddleCenter;
         h.childControlWidth = false; h.childControlHeight = false;

@@ -6,8 +6,31 @@ using UnityEngine.UI;
 public class DeckSelectionUIManager : MonoBehaviour
 {
     public RectTransform contentParent; // ScrollView -> Content
-    public GameObject cardUIPrefab; 	// CardUI prefab
+    public GameObject cardUIPrefab;     // CardUI prefab
     public DeckManagerObject deckManager;
+
+    [Header("UI Referansları")]
+    public GameObject bottomNav;   // BottomNav paneli
+    public GameObject mainMenuBtn; // Ana Menü butonu (Canvas içinde)
+
+    void OnEnable()
+    {
+        // Panel açılınca: BottomNav kapansın, MainMenu açılsın
+        //if (bottomNav) bottomNav.SetActive(false);
+        //if (mainMenuBtn) mainMenuBtn.SetActive(true);
+
+        // ModalGuard varsa aktif et
+       // ModalGuard.Open(this.gameObject);
+    }
+
+    void OnDisable()
+    {
+        // Panel kapanınca: BottomNav tekrar açılsın, MainMenu kapansın
+        //if (bottomNav) bottomNav.SetActive(true);
+        //if (mainMenuBtn) mainMenuBtn.SetActive(false);
+
+        //ModalGuard.Close(this.gameObject);
+    }
 
     void Start()
     {
