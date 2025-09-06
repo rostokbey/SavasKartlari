@@ -24850,7 +24850,7 @@ MonoBehaviour:
   m_ChildAlignment: 1
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 585, y: 1266}
+  m_CellSize: {x: 966, y: 1566}
   m_Spacing: {x: 10, y: 10}
   m_Constraint: 1
   m_ConstraintCount: 2
@@ -27524,7 +27524,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
       propertyPath: deckMaxSize
-      value: 25
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
       propertyPath: deck1.Array.size
