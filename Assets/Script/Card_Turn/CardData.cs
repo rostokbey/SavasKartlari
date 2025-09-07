@@ -11,8 +11,8 @@ public class CardData
     public int baseDamage;
 
     // DEX: base ve anlık
-    public int baseDex;   // küçük x
-    public int dex;       // küçük x
+    public int baseDex;
+    public int dex;
 
     // Diğer özellikler
     public string rarity;
@@ -30,15 +30,51 @@ public class CardData
     public string combo;
 
     // Görseller / Prefab’lar
-    public Sprite characterSprite;      // 2D liste görseli
-    public GameObject characterPrefab3D;// sahnede spawn’lanacak 3D prefab (istenirse)
-    public string prefab;               // Resources yolu (örn: "Prefabs3D/AgirZirh_insan3D")
+    public Sprite characterSprite;
+    public GameObject characterPrefab3D;
+    public string prefab;
+
+    // ---------------- Yeni Mekanik Alanlar ----------------
+    public enum CardType { Attack, Defense, Buff, Debuff, Utility, Special }
+    public CardType type;
+
+    public int damage;          // Doğrudan hasar
+    public int heal;            // İyileştirme miktarı
+    public int duration;        // Etkinin süresi (tur cinsinden)
+
+    public float critChance;    // Kritik ihtimali
+    public float critDamage;    // Kritik hasar çarpanı
+    public float reflect;       // Yansıtma yüzdesi
+
+    public bool stun;           // Sersemletme/dondurma
+    public bool banish;         // Zindana atma
+    public int summonCount;     // Klon sayısı
+    public bool combine;        // Kombine kartı mı
 
     // ---------------- Constructors ----------------
 
-    /// <summary>
-    /// GERİYE UYUMLU ESKİ SÜRÜM (tek dex parametresi alır)
-    /// </summary>
+    // Basitleştirilmiş constructor (Savaş kartları için)
+    public CardData(string id, string name, string ability)
+    {
+        this.id = id;
+        this.cardName = name;
+        this.ability = ability;
+
+        this.baseHP = 0;
+        this.baseDamage = 0;
+        this.baseDex = 0;
+        this.dex = 0;
+        this.rarity = "Common";
+        this.passive = "";
+        this.level = 1;
+        this.xp = 0;
+        this.skillCooldownMax = 0;
+        this.characterSprite = null;
+        this.characterPrefab3D = null;
+        this.prefab = null;
+    }
+
+    // Eski sürüm (tek dex parametresi alır)
     public CardData(
         string id, string name, int hp, int dmg, int dex,
         string rarity, string ability, string passive,
@@ -51,7 +87,7 @@ public class CardData
         this.baseHP = hp;
         this.baseDamage = dmg;
 
-        this.baseDex = dex; // tek parametre geldiyse ikisine de yaz
+        this.baseDex = dex;
         this.dex = dex;
 
         this.rarity = rarity;
@@ -67,9 +103,7 @@ public class CardData
         this.prefab = prefabPath;
     }
 
-    /// <summary>
-    /// YENİ SÜRÜM (baseDex + dex birlikte)
-    /// </summary>
+    // Yeni sürüm (baseDex + dex birlikte)
     public CardData(
         string id, string name, int hp, int dmg, int baseDex, int dex,
         string rarity, string ability, string passive,
@@ -98,7 +132,7 @@ public class CardData
         this.prefab = prefabPath;
     }
 
-    // Basit kopya (ui/listelerde işine yarar)
+    // Clone
     public CardData Clone()
     {
         return new CardData(
@@ -112,7 +146,20 @@ public class CardData
         {
             className = this.className,
             race = this.race,
-            combo = this.combo
+            combo = this.combo,
+
+            // Mekanik alanlar da kopyalansın
+            type = this.type,
+            damage = this.damage,
+            heal = this.heal,
+            duration = this.duration,
+            critChance = this.critChance,
+            critDamage = this.critDamage,
+            reflect = this.reflect,
+            stun = this.stun,
+            banish = this.banish,
+            summonCount = this.summonCount,
+            combine = this.combine
         };
     }
 }
