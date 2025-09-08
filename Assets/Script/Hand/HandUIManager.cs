@@ -1,73 +1,77 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class HandUIManager : MonoBehaviour
 {
-    [Header("UI Alanlarý")]
-    public Transform handArea;      // Kartlarýn görüneceði panel
-    public Button attackButton;     // Saldýr butonu
+    [Header("UI AlanlarÄ±")]
+    public Transform handArea;      // KartlarÄ±n gÃ¶rÃ¼neceÄŸi panel
+    public Button attackButton;     // SaldÄ±r butonu
 
     [Header("Prefab")]
-    public GameObject cardPrefab;   // CardUI_Battle prefabý
+    public GameObject cardPrefab;   // CardUI_Battle prefabÄ±
 
     private List<CardUI> handCards = new List<CardUI>();
-    private CardData selectedCard;  // Oyuncunun seçtiði kart
+    private CardData selectedCard;  // Oyuncunun seÃ§tiÄŸi kart
 
-    // Baþlatma -> Desteden 5 kart çek
+    private CardData currentSelectedCard; // o tur seÃ§ilen kart
+
+    // BaÅŸlatma -> Desteden 5 kart Ã§ek
     public void Init(List<CardData> deck)
     {
-        handCards.Clear();
-
-        for (int i = 0; i < 5 && i < deck.Count; i++)
+        // Hand area boÅŸ mu kontrol et
+        if (handArea == null || cardPrefab == null)
         {
-            var card = deck[i];
-
-            // Kart UI oluþtur
-            var uiObj = Instantiate(cardPrefab, handArea);
-            var ui = uiObj.GetComponent<CardUI>();
-            ui.SetCardData(card, true);
-
-            // Seçilirse sahneye spawn et
-            ui.onSelect = (c) =>
-            {
-                OnCardSelected(c);
-            };
-
-            handCards.Add(ui);
+            Debug.LogError("[HandUI] Referanslar eksik! handArea veya cardPrefab atanmadÄ±.");
+            return;
         }
 
-        // Saldýr butonu baþlangýçta kapalý
+        // Ã¶nce eldeki kartlarÄ± temizle
+        foreach (Transform child in handArea)
+            Destroy(child.gameObject);
+
+        // sadece 5 kart Ã§ekelim
+        foreach (var card in deck.Take(5))
+        {
+            var go = Instantiate(cardPrefab, handArea);
+            var ui = go.GetComponent<CardUI>();
+
+            // savaÅŸ modu
+            ui.isInBattle = true;
+            ui.SetCardData(card, true);
+
+            // seÃ§ilince HandUIManagerâ€™a haber ver
+            ui.onSelect = (selectedCard) =>
+            {
+                currentSelectedCard = selectedCard;
+                Debug.Log($"[HandUI] Kart seÃ§ildi: {selectedCard.cardName}");
+            };
+        }
+
+        // Attack butonuna baÄŸla
         if (attackButton != null)
-            attackButton.gameObject.SetActive(false);
+        {
+            attackButton.onClick.RemoveAllListeners();
+            attackButton.onClick.AddListener(OnAttackPressed);
+        }
     }
 
-    // Kart seçildiðinde
-    private void OnCardSelected(CardData card)
+    private void OnAttackPressed()
     {
-        selectedCard = card;
-        Debug.Log("[HandUI] Kart seçildi: " + card.cardName);
+        if (currentSelectedCard == null)
+        {
+            Debug.LogWarning("[HandUI] HiÃ§ kart seÃ§ilmedi.");
+            return;
+        }
 
-        // 3D prefab sahneye spawn edilir
-        var bm = FindObjectOfType<BattleManager>();
-        bm.SpawnCharacter(card, true);
+        Debug.Log($"[HandUI] Attack basÄ±ldÄ±, kart oynanÄ±yor: {currentSelectedCard.cardName}");
 
-        // Saldýr butonu aktif edilir
-        if (attackButton != null)
-            attackButton.gameObject.SetActive(true);
+        // BattleManagerâ€™a haber ver â†’ sahneye spawn et
+        BattleManager.Instance.Attack(currentSelectedCard);
+
+        // seÃ§im sÄ±fÄ±rlanÄ±r
+        currentSelectedCard = null;
     }
 
-    // Saldýr butonuna basýldýðýnda
-    public void OnAttackPressed()
-    {
-        if (selectedCard == null) return;
-
-        Debug.Log("[HandUI] Saldýr butonu basýldý: " + selectedCard.cardName);
-
-        var bm = FindObjectOfType<BattleManager>();
-        bm.Attack(selectedCard);
-
-        // Ýstersen butonu tekrar kapatabilirsin (tur sistemi için)
-        attackButton.gameObject.SetActive(false);
-    }
 }

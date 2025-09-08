@@ -329,11 +329,10 @@ public class BattleManager : NetworkBehaviour
     // Saldırı butonu bu fonksiyonu çağıracak (HandUIManager → BattleManager.Attack)
     public void Attack(CardData card)
     {
-        Debug.Log($"[BM] Attack çağrıldı: {card.cardName}");
-        // Buraya vurma/animasyon/hasar hesapları gelecek.
-        // Şimdilik turu ilerlet:
-        SendAttackServerRpc();
+        Debug.Log($"[BM] Attack() çağrıldı: {card.cardName}");
+        SpawnCharacter(card, true); // oyuncu tarafına spawn et
     }
+
 
     #endregion
     // ---------------------------------------------------------------------
@@ -488,6 +487,8 @@ public class BattleManager : NetworkBehaviour
                 ui.SetCardData(card, false);
         }
     }
+
+   
 
     #endregion
 }
