@@ -1,56 +1,73 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HandUIManager : MonoBehaviour
 {
-    [Header("UI Refs")]
-    public Transform handContent;           // Horizontal Layout -> Content
-    public GameObject cardUIPrefab;         // SAVAÞ kart prefabý (CardUI_Battle scriptli)
+    [Header("UI Alanlarý")]
+    public Transform handArea;      // Kartlarýn görüneceði panel
+    public Button attackButton;     // Saldýr butonu
 
-    [Header("Settings")]
-    public int handSize = 5;                // elde açýk gösterilecek kart sayýsý
+    [Header("Prefab")]
+    public GameObject cardPrefab;   // CardUI_Battle prefabý
 
-    // ---- Dýþarýdan çaðýr: eldeki kartlarý üret ----
-    public void BuildHandFromDeck(List<CardData> deck)
+    private List<CardUI> handCards = new List<CardUI>();
+    private CardData selectedCard;  // Oyuncunun seçtiði kart
+
+    // Baþlatma -> Desteden 5 kart çek
+    public void Init(List<CardData> deck)
     {
-        if (handContent == null || cardUIPrefab == null || deck == null) return;
+        handCards.Clear();
 
-        // Temizle
-        for (int i = handContent.childCount - 1; i >= 0; i--)
-            Destroy(handContent.GetChild(i).gameObject);
-
-        // Basit karýþtýrma
-        var list = new List<CardData>(deck);
-        for (int i = 0; i < list.Count; i++)
+        for (int i = 0; i < 5 && i < deck.Count; i++)
         {
-            int j = Random.Range(i, list.Count);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
+            var card = deck[i];
 
-        // ilk handSize adet açýk, sonraki 3 adet kapalý örneði
-        int openCount = Mathf.Min(handSize, list.Count);
-        int total = Mathf.Min(list.Count, handSize + 3);
+            // Kart UI oluþtur
+            var uiObj = Instantiate(cardPrefab, handArea);
+            var ui = uiObj.GetComponent<CardUI>();
+            ui.SetCardData(card, true);
 
-        for (int i = 0; i < total; i++)
-        {
-            var go = Instantiate(cardUIPrefab, handContent);
-            go.transform.localScale = Vector3.one;
-
-            var ui = go.GetComponent<CardUI_Battle>(); // << SAVAÞ scripti
-            if (ui != null)
+            // Seçilirse sahneye spawn et
+            ui.onSelect = (c) =>
             {
-                bool faceUp = i < openCount;
-                ui.SetCardData(list[i], faceUp);
-            }
+                OnCardSelected(c);
+            };
+
+            handCards.Add(ui);
         }
+
+        // Saldýr butonu baþlangýçta kapalý
+        if (attackButton != null)
+            attackButton.gameObject.SetActive(false);
     }
 
-    // ---- BattleManager kolay çaðýrabilsin diye sargý ----
-    public void Init(List<CardData> deck, GameObject overrideCardPrefab = null)
+    // Kart seçildiðinde
+    private void OnCardSelected(CardData card)
     {
-        if (overrideCardPrefab != null)
-            cardUIPrefab = overrideCardPrefab;
+        selectedCard = card;
+        Debug.Log("[HandUI] Kart seçildi: " + card.cardName);
 
-        BuildHandFromDeck(deck);
+        // 3D prefab sahneye spawn edilir
+        var bm = FindObjectOfType<BattleManager>();
+        bm.SpawnCharacter(card, true);
+
+        // Saldýr butonu aktif edilir
+        if (attackButton != null)
+            attackButton.gameObject.SetActive(true);
+    }
+
+    // Saldýr butonuna basýldýðýnda
+    public void OnAttackPressed()
+    {
+        if (selectedCard == null) return;
+
+        Debug.Log("[HandUI] Saldýr butonu basýldý: " + selectedCard.cardName);
+
+        var bm = FindObjectOfType<BattleManager>();
+        bm.Attack(selectedCard);
+
+        // Ýstersen butonu tekrar kapatabilirsin (tur sistemi için)
+        attackButton.gameObject.SetActive(false);
     }
 }

@@ -10,7 +10,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4560204575190123577, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
       propertyPath: m_Name
-      value: karabuyu
+      value: KARA_BUYUCUSU3D
+      objectReference: {fileID: 0}
+    - target: {fileID: 4960062814192846407, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 4960062814192846407, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
       propertyPath: m_LocalPosition.x
@@ -51,6 +55,18 @@ PrefabInstance:
     - target: {fileID: 4960062814192846407, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5220309701858552942, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 5220309701858552942, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 5220309701858552942, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6982685513382906643, guid: cd50bf5a14cd94943852e92bc8b3f221, type: 3}
       propertyPath: GlobalObjectIdHash

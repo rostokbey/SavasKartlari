@@ -25,18 +25,21 @@ public class BattleManager : NetworkBehaviour
     public Transform enemyCardParent;
     public GameObject cardSlotPrefab;
 
-    // (Opsiyonel) UI'dan doğrudan başlatmak istersen bu butonu sahneden bağlayabilirsin
     [Tooltip("İstersen sahneden bağla; bağlanmazsa da OnStartBattleButton() çağrılabilir.")]
     public Button startBattleButton;
 
     [Header("Turn Yönetimi")]
     public ulong currentTurnClientId;
 
+    // --- RUNTIME ---
     private readonly List<Character> allCharacters = new();
     private readonly Dictionary<ulong, List<string>> playerSubmittedCardIds = new();
-
     private List<Character> turnOrder = new();
     private int currentIndex = 0;
+
+    // Tek kart spawn için sıralı slot takibi
+    private int nextPlayerSpawnIndex = 0;
+    private int nextEnemySpawnIndex = 0;
 
     void Awake()
     {
@@ -46,22 +49,20 @@ public class BattleManager : NetworkBehaviour
 
     void Start()
     {
-
         // TEST: Eğer ağ henüz başlamadıysa Host olarak başlat
         if (NetworkManager.Singleton &&
-       !NetworkManager.Singleton.IsServer &&
-       !NetworkManager.Singleton.IsClient)
+            !NetworkManager.Singleton.IsServer &&
+            !NetworkManager.Singleton.IsClient)
         {
             NetworkManager.Singleton.StartHost();
             Debug.Log("[BM] Test: Host başladı (Editor/tek cihaz testi).");
         }
 
-
         // UI buton bağlama (varsa)
         if (startBattleButton != null)
             startBattleButton.onClick.AddListener(OnStartBattleButton);
 
-        //test sonrası sil !!!! 
+        // Sunucu değilsek burada erken çık (tek cihaz testinde Host'sun zaten)
         if (!IsServer) return;
 
         var playerCards = StartBattleManager.Instance?.selectedMatchCards;
@@ -81,38 +82,25 @@ public class BattleManager : NetworkBehaviour
         // Oyuncu tarafının kart UI'larını göster
         SpawnPlayerCards(playerCards);
 
-        // Düşman destesini UI'da göster ()
-        //ShowEnemyDeck(enemyCards);
-        // Kart listelerini aldıktan sonra:
+        // Kart listelerini aldıktan sonra: elde 5 kart göster
         var handUI = FindObjectOfType<HandUIManager>(true);
-        if (handUI != null && StartBattleManager.Instance != null)
+        if (handUI != null)
         {
-            var playerDeck = StartBattleManager.Instance.selectedMatchCards;
-
-            // Sadece TEK çağrı! İkinciyi sil.
-            // Eğer HandUIManager.cardUIPrefab'ı Inspector'dan zaten CardUI_BattlePrefab'a atadıysan:
-            handUI.Init(playerDeck);
-
-            // Eğer Inspector’da atamadıysan ve koddan vermek istiyorsan:
-            // handUI.Init(playerDeck, cardUIBattlePrefabRef); // (GameObject referansı)
+            var deck = StartBattleManager.Instance.selectedMatchCards;
+            handUI.Init(deck);
         }
 
-
-        // 3D karakterleri sahneye bas deneme satrı sonra sil!!!
-        SpawnCharacters(playerCards, enemyCards);
+        // 🧪 DENEME: Tüm karakterleri anında sahaya basmak istersen açık bırak,
+        // kart seçerek spawn akışı deneyeceksen bu satırı YORUM SATIRI yap.
+        // SpawnCharacters(playerCards, enemyCards);
 
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
-
-       
-        
-
     }
 
     // ---------------------------------------------------------------------
     #region UI'dan Savaş Başlatma (opsiyonel)
 
-    // UI'daki "SAVAŞ BAŞLAT" butonuna verebileceğin güvenli çağrı.
     public void OnStartBattleButton()
     {
         var playerCards = StartBattleManager.Instance?.selectedMatchCards;
@@ -124,7 +112,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Sunucu değilsek sunucu zaten Start'ta basacaktır; tek cihaz testinde de çalışsın:
         if (IsServer)
             SpawnCharacters(playerCards, enemyCards);
 
@@ -136,27 +123,26 @@ public class BattleManager : NetworkBehaviour
 
     #region Oyuncu Kart UI
 
-    // ------------------------------
     // Oyuncu kartlarını UI'da gösterme (CardUI spawn)
-    // ------------------------------
     public void SpawnPlayerCards(List<CardData> selectedCards)
     {
         for (int i = 0; i < selectedCards.Count && i < playerGridPositions.Length; i++)
         {
             var cardData = selectedCards[i];
 
-            // CardUI prefabını grid konumuna instantiate et
             GameObject go = Instantiate(cardPrefab, playerGridPositions[i].position, Quaternion.identity);
-            go.transform.SetParent(playerGridPositions[i], false); // parent + local sıfır
+            go.transform.SetParent(playerGridPositions[i], false);
 
             var ui = go.GetComponent<CardUI>();
             if (ui != null)
-                ui.SetCardData(cardData, false); // savaş sahnesinde butonlar gizli
+                ui.SetCardData(cardData, false); // savaş sahnesinde butonlar gizli (UI kartlarını sade tutmak için)
         }
     }
 
+    #endregion
+
     // ---------------------------------------------------------
-    // 3D KARAKTER SPAWN (oyuncu + düşman) — hizalama iyileştirilmiş
+    // 3D KARAKTER TOPLU SPAWN (oyuncu + düşman)
     // ---------------------------------------------------------
     public void SpawnCharacters(List<CardData> playerCards, List<CardData> enemyCards)
     {
@@ -172,10 +158,8 @@ public class BattleManager : NetworkBehaviour
             var card = playerCards[i];
             var grid = playerGridPositions[i];
 
-            // Kart özel prefabı varsa onu, yoksa default'u kullan
             var prefabToUse = ResolvePrefab(card);
             if (prefabToUse == null) { Debug.LogWarning($"[BM] Prefab yok: {card.cardName}"); continue; }
-
 
             if (prefabToUse == characterPrefab)
             {
@@ -183,23 +167,19 @@ public class BattleManager : NetworkBehaviour
                                  "QR prefab yolu/isimleri ve Resources konumunu kontrol et.");
             }
 
-
             Debug.Log($"[A] Oyuncu spawn -> {card.cardName}, Prefab: {(card.characterPrefab3D ? card.characterPrefab3D.name : "Default")}");
 
             var obj = Instantiate(prefabToUse, grid.position, grid.rotation);
-            var net = obj.GetComponent<Unity.Netcode.NetworkObject>();
+            var net = obj.GetComponent<NetworkObject>();
 
-            // 1) Spawn
-            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
                 net.Spawn();
 
-            // 2) Parent
-            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
                 net.TrySetParent(grid, false);
             else
                 obj.transform.SetParent(grid, false);
 
-            // 3) Lokal hizalama
             obj.transform.localPosition = Vector3.zero;
             obj.transform.localRotation = Quaternion.identity;
             obj.transform.localScale = Vector3.one;
@@ -221,16 +201,15 @@ public class BattleManager : NetworkBehaviour
             var prefabToUse = ResolvePrefab(card);
             if (prefabToUse == null) { Debug.LogWarning($"[BM] Prefab yok (enemy): {card.cardName}"); continue; }
 
-
             Debug.Log($"[B] Düşman spawn -> {card.cardName}, Prefab: {(card.characterPrefab3D ? card.characterPrefab3D.name : "Default")}");
 
             var obj = Instantiate(prefabToUse, grid.position, grid.rotation);
-            var net = obj.GetComponent<Unity.Netcode.NetworkObject>();
+            var net = obj.GetComponent<NetworkObject>();
 
-            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
                 net.Spawn();
 
-            if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
+            if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
                 net.TrySetParent(grid, false);
             else
                 obj.transform.SetParent(grid, false);
@@ -250,11 +229,70 @@ public class BattleManager : NetworkBehaviour
         AssignTurnToClient(currentTurnClientId);
     }
 
+    // ---------------------------------------------------------
+    // 3D KARAKTER TEK KART SPAWN (elde seçilen kart için)
+    // ---------------------------------------------------------
+    public void SpawnCharacter(CardData card, bool isPlayer)
+    {
+        if (!IsServer)
+        {
+            Debug.LogWarning("SpawnCharacter sadece sunucu tarafından çağrılabilir.");
+            return;
+        }
 
+        Transform[] gridArray = isPlayer ? playerGridPositions : enemyGridPositions;
+        int index = isPlayer ? nextPlayerSpawnIndex : nextEnemySpawnIndex;
 
-    #endregion
+        if (gridArray == null || gridArray.Length == 0)
+        {
+            Debug.LogWarning("[BM] GridPositions atanmadı.");
+            return;
+        }
+
+        if (index >= gridArray.Length)
+        {
+            Debug.LogWarning("[BM] Spawn için boş slot kalmadı!");
+            return;
+        }
+
+        Transform slot = gridArray[index];
+        if (isPlayer) nextPlayerSpawnIndex++; else nextEnemySpawnIndex++;
+
+        var prefabToUse = ResolvePrefab(card);
+        if (prefabToUse == null)
+        {
+            Debug.LogWarning($"[BM] Prefab yok: {card?.cardName}");
+            return;
+        }
+
+        var obj = Instantiate(prefabToUse, slot.position, slot.rotation);
+        var net = obj.GetComponent<NetworkObject>();
+
+        if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+            net.Spawn();
+
+        // Parent ayarı
+        if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
+            net.TrySetParent(slot, false);
+        else
+            obj.transform.SetParent(slot, false);
+
+        // Hizalama
+        obj.transform.localPosition = Vector3.zero;
+        obj.transform.localRotation = isPlayer ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
+        obj.transform.localScale = Vector3.one;
+
+        var ch = obj.GetComponent<Character>();
+        if (ch != null)
+        {
+            ch.Setup(card);
+            allCharacters.Add(ch);
+        }
+
+        Debug.Log($"[BM] Tek kart spawn: {(isPlayer ? "Player" : "Enemy")} -> {card.cardName}");
+    }
+
     // ---------------------------------------------------------------------
-
     #region Turn Sistemi
 
     public void AssignTurnToClient(ulong clientId)
@@ -286,6 +324,15 @@ public class BattleManager : NetworkBehaviour
     {
         if (turnOrder == null || turnOrder.Count == 0) return;
         turnOrder[currentIndex].SetTurn(true);
+    }
+
+    // Saldırı butonu bu fonksiyonu çağıracak (HandUIManager → BattleManager.Attack)
+    public void Attack(CardData card)
+    {
+        Debug.Log($"[BM] Attack çağrıldı: {card.cardName}");
+        // Buraya vurma/animasyon/hasar hesapları gelecek.
+        // Şimdilik turu ilerlet:
+        SendAttackServerRpc();
     }
 
     #endregion
@@ -346,20 +393,15 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // ✅ Kullanılacak prefab'ı seç
         GameObject prefabToUse = ResolvePrefab(card);
         if (prefabToUse == null) return;
 
-
-        // ✅ Spawn pozisyonunu seç
         Vector3 spawnPos = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId
             ? playerSpawnPoint.position
             : enemySpawnPoint.position;
 
-        // ✅ Instantiate et
         GameObject obj = Instantiate(prefabToUse, spawnPos, Quaternion.identity);
 
-        // hizalama (spawn point child'ı değil; sahneye serbest)
         var ch = obj.GetComponent<Character>();
         if (ch != null) ch.Setup(card);
 
@@ -446,8 +488,6 @@ public class BattleManager : NetworkBehaviour
                 ui.SetCardData(card, false);
         }
     }
-
-    
 
     #endregion
 }

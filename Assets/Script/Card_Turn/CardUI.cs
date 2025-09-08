@@ -26,6 +26,9 @@ public class CardUI : MonoBehaviour
 
     private CardData cardData;
 
+    // 🔹 Yeni: HandUIManager aboneliği için event
+    public System.Action<CardData> onSelect;
+
     void Start()
     {
         // Detay butonu
@@ -94,7 +97,7 @@ public class CardUI : MonoBehaviour
         // selectButton'ı savaş akışına göre açık/kapalı bırakabilirsin
     }
 
-    // ---- Tıklama API'lerin (sende zaten vardı) ----
+    // ---- Tıklama API'leri ----
     public System.Action onClick;
 
     public void SetInteractable(bool b)
@@ -114,6 +117,12 @@ public class CardUI : MonoBehaviour
     public void OnSelectClicked()
     {
         if (!isInBattle)
+        {
+            // Eski davranış (deste seçme popup)
             DeckSelectPopup.Instance?.ShowDeckChoice(this.cardData);
+        }
+
+        // 🔹 Yeni: HandUIManager’a haber ver
+        onSelect?.Invoke(cardData);
     }
 }
