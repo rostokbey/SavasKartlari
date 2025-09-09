@@ -80,7 +80,7 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
 
         // Oyuncu tarafının kart UI'larını göster
-        SpawnPlayerCards(playerCards);
+        //SpawnPlayerCards(playerCards);
 
         // Kart listelerini aldıktan sonra: elde 5 kart göster
         var handUI = FindObjectOfType<HandUIManager>(true);
