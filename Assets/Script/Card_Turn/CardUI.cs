@@ -17,7 +17,7 @@ public class CardUI : MonoBehaviour
     [Tooltip("Kartın arka yüzü (ters kapak görseli)")]
     public Image backImage;        // back (opsiyonel)
 
-    [Header("Butonlar (envanterde görünür)")]
+    [Header("Butonlar")]
     public Button detailButton;
     public Button selectButton;
 
@@ -26,7 +26,7 @@ public class CardUI : MonoBehaviour
 
     private CardData cardData;
 
-    // 🔹 Yeni: HandUIManager aboneliği için event
+    // ---- Callback ----
     public System.Action<CardData> onSelect;
 
     void Start()
@@ -44,17 +44,11 @@ public class CardUI : MonoBehaviour
         {
             selectButton.onClick.RemoveAllListeners();
             selectButton.onClick.AddListener(OnSelectClicked);
-            selectButton.gameObject.SetActive(!isInBattle);
+            selectButton.gameObject.SetActive(true); // savaşta da lazım
         }
     }
 
-    // ---- Overload 1: Eski çağrıları korumak için (tek parametre) ----
-    public void SetCardData(CardData data)
-    {
-        SetCardData(data, true); // default: butonlar açık
-    }
-
-    // ---- Overload 2: Envanter/Savaş genel kullanım ----
+    // ---- Kart verisi set etme ----
     public void SetCardData(CardData data, bool showButtons = true)
     {
         cardData = data;
@@ -68,61 +62,36 @@ public class CardUI : MonoBehaviour
 
         if (characterImage) characterImage.sprite = data.characterSprite;
 
-        // Buton görünürlükleri (savaşta gizlemek için showButtons=false gönder)
         if (detailButton) detailButton.gameObject.SetActive(showButtons && !isInBattle);
-        if (selectButton) selectButton.gameObject.SetActive(showButtons && !isInBattle);
-
-        // Varsayılan: ön yüz açık
-        SetFaceUp(true);
+        if (selectButton) selectButton.gameObject.SetActive(showButtons);
     }
 
-    /// Ön/arka yüz kontrolü (elde ters kart göstermek için)
+    // ---- Ön/arka yüz ----
     public void SetFaceUp(bool faceUp)
     {
         if (characterImage) characterImage.gameObject.SetActive(faceUp);
         if (backImage) backImage.gameObject.SetActive(!faceUp);
     }
 
-    public void SetBattleMode(bool on)
-    {
-        isInBattle = on;
-
-        if (nameText) nameText.gameObject.SetActive(!on);
-        if (hpText) hpText.gameObject.SetActive(!on);
-        if (dexText) dexText.gameObject.SetActive(!on);
-        if (levelText) levelText.gameObject.SetActive(!on);
-        if (xpText) xpText.gameObject.SetActive(!on);
-
-        if (detailButton) detailButton.gameObject.SetActive(!on);
-        // selectButton'ı savaş akışına göre açık/kapalı bırakabilirsin
-    }
-
-    // ---- Tıklama API'leri ----
-    public System.Action onClick;
-
-    public void SetInteractable(bool b)
-    {
-        var btn = GetComponent<Button>();
-        if (btn) btn.interactable = b;
-    }
-
-    public void OnButtonClick() => onClick?.Invoke();
-
+    // ---- Tıklamalar ----
     public void OnCardClicked()
     {
         if (!isInBattle)
             CardDetailPanel.Instance?.ShowCardDetails(cardData);
     }
 
+    
+
     public void OnSelectClicked()
     {
-        if (!isInBattle)
+        if (isInBattle)
         {
-            // Eski davranış (deste seçme popup)
+            onSelect?.Invoke(cardData); // HandUIManager'a haber ver
+        }
+        else
+        {
             DeckSelectPopup.Instance?.ShowDeckChoice(this.cardData);
         }
-
-        // 🔹 Yeni: HandUIManager’a haber ver
-        onSelect?.Invoke(cardData);
     }
+
 }

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class CardUI_Battle : MonoBehaviour
 {
     public Image frontImage;
-    public Image backImage;
+
 
     private CardData data;
 
@@ -18,6 +18,8 @@ public class CardUI_Battle : MonoBehaviour
     public void SetFace(bool faceUp)
     {
         if (frontImage) frontImage.enabled = faceUp;
-        if (backImage) backImage.enabled = !faceUp;
+
     }
+
+
 }

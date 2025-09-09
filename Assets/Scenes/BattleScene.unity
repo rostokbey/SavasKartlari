@@ -521,6 +521,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1424980466}
+  - {fileID: 1400460094}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -637,7 +638,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 477649337}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.000003914}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -646,8 +647,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -137.5, y: 62.5}
-  m_SizeDelta: {x: 275, y: 125}
+  m_AnchoredPosition: {x: -137.5, y: 53.844017}
+  m_SizeDelta: {x: 275, y: 107.688}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &505311392
 GameObject:
@@ -1073,6 +1074,7 @@ MonoBehaviour:
   handArea: {fileID: 1400460094}
   attackButton: {fileID: 477649338}
   cardPrefab: {fileID: 1052116267485502868, guid: 54e42183de7c1e9498e36edc050203bd, type: 3}
+  backgroundCard: {fileID: 0}
 --- !u!4 &1122185366
 Transform:
   m_ObjectHideFlags: 0
@@ -1275,12 +1277,11 @@ RectTransform:
   m_Children:
   - {fileID: 1548092772}
   - {fileID: 477649341}
-  - {fileID: 1400460094}
   m_Father: {fileID: 1424980466}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 125.362854}
+  m_AnchoredPosition: {x: 0, y: 125.36279}
   m_SizeDelta: {x: 0, y: 250.7257}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1317994022
@@ -1364,6 +1365,7 @@ GameObject:
   - component: {fileID: 1400460098}
   - component: {fileID: 1400460097}
   - component: {fileID: 1400460095}
+  - component: {fileID: 1400460099}
   m_Layer: 5
   m_Name: HandArea
   m_TagString: Untagged
@@ -1383,12 +1385,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1317994021}
+  m_Father: {fileID: 347803087}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -137.5, y: 124.5943}
-  m_SizeDelta: {x: 1645, y: 249.1886}
+  m_AnchoredPosition: {x: -23.075104, y: 100.4021}
+  m_SizeDelta: {x: 1414.3539, y: 200.8042}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1400460095
 MonoBehaviour:
@@ -1403,12 +1405,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_Spacing: 0
+    m_Left: 100
+    m_Right: 10
+    m_Top: 1000
+    m_Bottom: 10
+  m_ChildAlignment: 4
+  m_Spacing: 10
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -1454,6 +1456,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1400460093}
   m_CullTransparentMesh: 1
+--- !u!114 &1400460099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400460093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 0
+  m_VerticalFit: 0
 --- !u!1 &1424980465
 GameObject:
   m_ObjectHideFlags: 0
@@ -1709,7 +1725,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1548092771}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.0000041586}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1718,8 +1734,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -137.52002, y: 188.23}
-  m_SizeDelta: {x: 274.97, y: 125}
+  m_AnchoredPosition: {x: -137.52002, y: 154.11462}
+  m_SizeDelta: {x: 274.97, y: 92.8492}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1548092773
 MonoBehaviour:
@@ -2574,7 +2590,7 @@ PrefabInstance:
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: attackButton
       value: 
-      objectReference: {fileID: 1548092773}
+      objectReference: {fileID: 477649338}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: cardSlotPrefab
       value: 

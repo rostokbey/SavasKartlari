@@ -10,46 +10,57 @@ public class HandUIManager : MonoBehaviour
     public Button attackButton;     // Saldır butonu
 
     [Header("Prefab")]
-    public GameObject cardPrefab;   // CardUI_Battle prefabı
+    public GameObject cardPrefab;   // CardUI_Battle prefabı (üstünde CardUI.cs var)
+
+    [Header("Arka Plan")]
+    public GameObject backgroundCard; // Sadece bir tane arka kart resmi
 
     private List<CardUI> handCards = new List<CardUI>();
-    private CardData selectedCard;  // Oyuncunun seçtiği kart
-
     private CardData currentSelectedCard; // o tur seçilen kart
 
     // Başlatma -> Desteden 5 kart çek
     public void Init(List<CardData> deck)
     {
-        // Hand area boş mu kontrol et
-        if (handArea == null || cardPrefab == null)
+        if (handArea == null || cardPrefab == null || deck == null)
         {
-            Debug.LogError("[HandUI] Referanslar eksik! handArea veya cardPrefab atanmadı.");
+            Debug.LogError("[HandUI] Gerekli referanslar atanmamış!");
             return;
         }
 
-        // önce eldeki kartları temizle
         foreach (Transform child in handArea)
             Destroy(child.gameObject);
 
-        // sadece 5 kart çekelim
+        handCards.Clear();
+
+        if (backgroundCard != null)
+        {
+            var bgCard = Instantiate(backgroundCard, handArea);
+            bgCard.transform.SetAsFirstSibling();
+        }
+
         foreach (var card in deck.Take(5))
         {
             var go = Instantiate(cardPrefab, handArea);
             var ui = go.GetComponent<CardUI>();
 
-            // savaş modu
+            if (ui == null)
+            {
+                Debug.LogWarning("[HandUI] CardUI component bulunamadı!");
+                continue;
+            }
+
             ui.isInBattle = true;
             ui.SetCardData(card, true);
 
-            // seçilince HandUIManager’a haber ver
             ui.onSelect = (selectedCard) =>
             {
                 currentSelectedCard = selectedCard;
                 Debug.Log($"[HandUI] Kart seçildi: {selectedCard.cardName}");
             };
+
+            handCards.Add(ui);
         }
 
-        // Attack butonuna bağla
         if (attackButton != null)
         {
             attackButton.onClick.RemoveAllListeners();
@@ -65,13 +76,14 @@ public class HandUIManager : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[HandUI] Attack basıldı, kart oynanıyor: {currentSelectedCard.cardName}");
+        Debug.Log($"[HandUI] Attack basıldı: {currentSelectedCard.cardName}");
 
-        // BattleManager’a haber ver → sahneye spawn et
-        BattleManager.Instance.Attack(currentSelectedCard);
+        if (BattleManager.Instance != null)
+        {
+            BattleManager.Instance.Attack(currentSelectedCard, true); // oyuncu kartı
+        }
 
-        // seçim sıfırlanır
-        currentSelectedCard = null;
+        currentSelectedCard = null; // seçim sıfırla
     }
 
 }

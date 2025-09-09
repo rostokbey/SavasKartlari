@@ -86,10 +86,20 @@ public class BattleManager : NetworkBehaviour
         var handUI = FindObjectOfType<HandUIManager>(true);
         if (handUI != null)
         {
-            var deck = StartBattleManager.Instance.selectedMatchCards;
-            handUI.Init(deck);
+            var deck = StartBattleManager.Instance != null ? StartBattleManager.Instance.selectedMatchCards : null;
+            if (deck != null && deck.Count > 0)
+            {
+                handUI.Init(deck);
+            }
+            else
+            {
+                Debug.LogError("[BM] Deck null veya boş! HandUIManager başlatılamadı.");
+            }
         }
-
+        else
+        {
+            Debug.LogWarning("[BM] HandUIManager bulunamadı!");
+        }
         // 🧪 DENEME: Tüm karakterleri anında sahaya basmak istersen açık bırak,
         // kart seçerek spawn akışı deneyeceksen bu satırı YORUM SATIRI yap.
         // SpawnCharacters(playerCards, enemyCards);
@@ -113,7 +123,7 @@ public class BattleManager : NetworkBehaviour
         }
 
         if (IsServer)
-            SpawnCharacters(playerCards, enemyCards);
+            //SpawnCharacters(playerCards, enemyCards);
 
         StartBattle();
     }
@@ -129,13 +139,16 @@ public class BattleManager : NetworkBehaviour
         for (int i = 0; i < selectedCards.Count && i < playerGridPositions.Length; i++)
         {
             var cardData = selectedCards[i];
-
             GameObject go = Instantiate(cardPrefab, playerGridPositions[i].position, Quaternion.identity);
             go.transform.SetParent(playerGridPositions[i], false);
 
+            // Kartı tam olarak pozisyona yerleştir
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+
             var ui = go.GetComponent<CardUI>();
             if (ui != null)
-                ui.SetCardData(cardData, false); // savaş sahnesinde butonlar gizli (UI kartlarını sade tutmak için)
+                ui.SetCardData(cardData, false);
         }
     }
 
@@ -326,13 +339,71 @@ public class BattleManager : NetworkBehaviour
         turnOrder[currentIndex].SetTurn(true);
     }
 
-    // Saldırı butonu bu fonksiyonu çağıracak (HandUIManager → BattleManager.Attack)
-    public void Attack(CardData card)
+    // ---------------------------------------------------------
+    // Oyuncu / Düşman saldırı
+    // ---------------------------------------------------------
+    public void Attack(CardData playedCard, bool isPlayerTurn = true)
     {
-        Debug.Log($"[BM] Attack() çağrıldı: {card.cardName}");
-        SpawnCharacter(card, true); // oyuncu tarafına spawn et
+        if (playedCard == null)
+        {
+            Debug.LogWarning("[BM] Attack: Kart null geldi.");
+            return;
+        }
+
+        Debug.Log($"[BM] Attack çağrıldı → {playedCard.cardName}, isPlayerTurn={isPlayerTurn}");
+
+        // Prefab çöz
+        var prefabToUse = ResolvePrefab(playedCard);
+        if (prefabToUse == null) return;
+
+        // Spawn noktası seç
+        Vector3 spawnPos = isPlayerTurn && playerSpawnPoint != null
+            ? playerSpawnPoint.position
+            : enemySpawnPoint != null ? enemySpawnPoint.position : Vector3.zero;
+
+        Quaternion spawnRot = isPlayerTurn
+            ? (playerSpawnPoint != null ? playerSpawnPoint.rotation : Quaternion.identity)
+            : (enemySpawnPoint != null ? enemySpawnPoint.rotation : Quaternion.Euler(0, 180, 0));
+
+        // Instantiate et
+        GameObject obj = Instantiate(prefabToUse, spawnPos, spawnRot);
+        var net = obj.GetComponent<Unity.Netcode.NetworkObject>();
+        if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
+            net.Spawn();
+
+        var ch = obj.GetComponent<Character>();
+        if (ch != null)
+        {
+            ch.Setup(playedCard);
+            allCharacters.Add(ch);
+        }
+
+        // Turu bitir
+        EndTurn();
+
+        // Eğer oyuncu oynadıysa → AI sırada
+        if (isPlayerTurn)
+            EnemyTurn();
     }
 
+    // ---------------------------------------------------------
+    // Düşman (AI) için otomatik kart oynatma
+    // ---------------------------------------------------------
+    private void EnemyTurn()
+    {
+        var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
+        if (enemyCards == null || enemyCards.Count == 0)
+        {
+            Debug.LogWarning("[AI] Enemy deck boş.");
+            return;
+        }
+
+        // Rastgele bir kart seç
+        var randomCard = enemyCards[Random.Range(0, enemyCards.Count)];
+        Debug.Log($"[AI] Düşman kart oynuyor: {randomCard.cardName}");
+
+        Attack(randomCard, false);
+    }
 
     #endregion
     // ---------------------------------------------------------------------
@@ -366,7 +437,7 @@ public class BattleManager : NetworkBehaviour
         var playerCards = deck1.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
         var enemyCards = deck2.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
 
-        SpawnCharacters(playerCards, enemyCards);
+        //SpawnCharacters(playerCards, enemyCards);
         StartBattle();
     }
 
