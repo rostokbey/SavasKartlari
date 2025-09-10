@@ -34,6 +34,9 @@ public class CardData
     public GameObject characterPrefab3D;
     public string prefab;
 
+    //CharacterPlacer.cs için eklendi
+    public string cardId;
+
     // ---------------- Yeni Mekanik Alanlar ----------------
     public enum CardType { Attack, Defense, Buff, Debuff, Utility, Special }
     public CardType type;

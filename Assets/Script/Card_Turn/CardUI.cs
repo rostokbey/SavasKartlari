@@ -74,12 +74,7 @@ public class CardUI : MonoBehaviour
     }
 
     // ---- Tıklamalar ----
-    public void OnCardClicked()
-    {
-        if (!isInBattle)
-            CardDetailPanel.Instance?.ShowCardDetails(cardData);
-    }
-
+   
     
 
     public void OnSelectClicked()
@@ -92,6 +87,15 @@ public class CardUI : MonoBehaviour
         {
             DeckSelectPopup.Instance?.ShowDeckChoice(this.cardData);
         }
+    }
+
+    // Bu fonksiyonu kartın Button component'inin OnClick event'ine bağlayın
+    public void OnCardClicked()
+    {
+        // CharacterPlacer'ı çağırarak yerleştirme moduna geç
+        CharacterPlacer.Instance.EnterPlacementMode(this.cardData);
+
+        // Kartı elden kaldırma gibi ek işlemler burada yapılabilir.
     }
 
 }

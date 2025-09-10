@@ -352,31 +352,11 @@ public class BattleManager : NetworkBehaviour
 
         Debug.Log($"[BM] Attack çağrıldı → {playedCard.cardName}, isPlayerTurn={isPlayerTurn}");
 
-        // Prefab çöz
-        var prefabToUse = ResolvePrefab(playedCard);
-        if (prefabToUse == null) return;
-
-        // Spawn noktası seç
-        Vector3 spawnPos = isPlayerTurn && playerSpawnPoint != null
-            ? playerSpawnPoint.position
-            : enemySpawnPoint != null ? enemySpawnPoint.position : Vector3.zero;
-
-        Quaternion spawnRot = isPlayerTurn
-            ? (playerSpawnPoint != null ? playerSpawnPoint.rotation : Quaternion.identity)
-            : (enemySpawnPoint != null ? enemySpawnPoint.rotation : Quaternion.Euler(0, 180, 0));
-
-        // Instantiate et
-        GameObject obj = Instantiate(prefabToUse, spawnPos, spawnRot);
-        var net = obj.GetComponent<Unity.Netcode.NetworkObject>();
-        if (net && Unity.Netcode.NetworkManager.Singleton && Unity.Netcode.NetworkManager.Singleton.IsServer)
-            net.Spawn();
-
-        var ch = obj.GetComponent<Character>();
-        if (ch != null)
-        {
-            ch.Setup(playedCard);
-            allCharacters.Add(ch);
-        }
+        // --- DEĞİŞİKLİK BURADA BAŞLIYOR ---
+        // Karakter oluşturma işini doğrudan SpawnCharacter fonksiyonuna devrediyoruz.
+        // Bu fonksiyon, doğru grid pozisyonunu kendi içinde bulacaktır.
+        SpawnCharacter(playedCard, isPlayerTurn);
+        // --- DEĞİŞİKLİK BURADA BİTİYOR ---
 
         // Turu bitir
         EndTurn();
@@ -451,6 +431,7 @@ public class BattleManager : NetworkBehaviour
         EndTurn();
     }
 
+    
     [ServerRpc(RequireOwnership = false)]
     public void PlayCardServerRpc(string cardId, ServerRpcParams rpcParams = default)
     {
@@ -463,20 +444,9 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        GameObject prefabToUse = ResolvePrefab(card);
-        if (prefabToUse == null) return;
-
-        Vector3 spawnPos = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId
-            ? playerSpawnPoint.position
-            : enemySpawnPoint.position;
-
-        GameObject obj = Instantiate(prefabToUse, spawnPos, Quaternion.identity);
-
-        var ch = obj.GetComponent<Character>();
-        if (ch != null) ch.Setup(card);
-
-        obj.GetComponent<NetworkObject>()?.SpawnWithOwnership(senderClientId);
-        allCharacters.Add(ch);
+        // kim oynadıysa ona göre player/enemy olarak spawn et
+        bool isPlayer = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
+        SpawnCharacter(card, isPlayer);
     }
 
     #endregion
@@ -559,7 +529,51 @@ public class BattleManager : NetworkBehaviour
         }
     }
 
-   
+
 
     #endregion
+
+    
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SpawnCharacterAtPositionServerRpc(string cardId, Vector3 position, ServerRpcParams rpcParams = default)
+    {
+        var card = FindObjectOfType<DeckManagerObject>().GetCardById(cardId);
+        if (card == null)
+        {
+            Debug.LogError("Spawn edilecek kart bulunamadı: " + cardId);
+            return;
+        }
+
+        // kimin oynadığını belirle
+        bool isPlayer = rpcParams.Receive.SenderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
+
+        var prefabToUse = ResolvePrefab(card);
+        if (prefabToUse == null)
+        {
+            Debug.LogError($"[BM] Prefab yok: {card?.cardName}");
+            return;
+        }
+
+        // Karakteri istenen pozisyonda oluştur
+        var obj = Instantiate(prefabToUse, position, Quaternion.identity);
+        var net = obj.GetComponent<NetworkObject>();
+
+        if (net && IsServer)
+            net.Spawn();
+
+        // Düşman karakterleri bize dönsün
+        obj.transform.rotation = isPlayer ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
+        obj.transform.localScale = Vector3.one;
+
+        var ch = obj.GetComponent<Character>();
+        if (ch != null)
+        {
+            ch.Setup(card);
+            allCharacters.Add(ch);
+        }
+
+        // NOT: Burada tur geçirme (EndTurn) mantığını da çağırabilirsiniz.
+        // EndTurn();
+    }
 }
