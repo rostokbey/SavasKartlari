@@ -193,8 +193,10 @@ public class BattleManager : NetworkBehaviour
             else
                 obj.transform.SetParent(grid, false);
 
-            obj.transform.localPosition = Vector3.zero;
-            obj.transform.localRotation = Quaternion.identity;
+            //karakter rotation ve pozisyon x y z
+            Vector3 offset = new Vector3(0f, 0f, -282f);
+            obj.transform.localPosition = offset;
+            obj.transform.localRotation = Quaternion.Euler(-33f, 0f, 0f);
             obj.transform.localScale = Vector3.one;
 
             var ch = obj.GetComponent<Character>();
@@ -536,17 +538,15 @@ public class BattleManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void SpawnCharacterAtPositionServerRpc(string id, Vector3 position, ServerRpcParams rpcParams = default)
-
+    public void SpawnCharacterAtPositionServerRpc(string cardId, Vector3 position, ServerRpcParams rpcParams = default)
     {
-        var card = FindObjectOfType<DeckManagerObject>().GetCardById(id);
+        var card = DeckManagerObject.Instance.GetCardById(cardId);
         if (card == null)
         {
-            Debug.LogError("Spawn edilecek kart bulunamadı: " + id);
+            Debug.LogError("Spawn edilecek kart bulunamadı: " + cardId);
             return;
         }
 
-        // kimin oynadığını belirle
         bool isPlayer = rpcParams.Receive.SenderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
 
         var prefabToUse = ResolvePrefab(card);
@@ -556,15 +556,23 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Karakteri istenen pozisyonda oluştur
-        var obj = Instantiate(prefabToUse, position, Quaternion.identity);
+       
+        // Pozisyonu Z ekseninde -282 kaydır
+        Vector3 spawnPos = position + new Vector3(0f, 0f, -25f);
+
+        // Oyuncu için X açısı -33, düşman için 180° Y rotation
+        Quaternion spawnRot = isPlayer
+            ? Quaternion.Euler(-33f, 0f, 0f)
+            : Quaternion.Euler(0f, 180f, 0f);
+
+        // --------------------------------
+
+        var obj = Instantiate(prefabToUse, spawnPos, spawnRot);
         var net = obj.GetComponent<NetworkObject>();
 
         if (net && IsServer)
             net.Spawn();
 
-        // Düşman karakterleri bize dönsün
-        obj.transform.rotation = isPlayer ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
         obj.transform.localScale = Vector3.one;
 
         var ch = obj.GetComponent<Character>();
@@ -573,8 +581,6 @@ public class BattleManager : NetworkBehaviour
             ch.Setup(card);
             allCharacters.Add(ch);
         }
-
-        // NOT: Burada tur geçirme (EndTurn) mantığını da çağırabilirsiniz.
-        // EndTurn();
     }
+
 }

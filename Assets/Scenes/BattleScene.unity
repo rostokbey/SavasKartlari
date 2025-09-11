@@ -277,8 +277,8 @@ Camera:
   near clip plane: 0.1
   far clip plane: 1000
   field of view: 81.69974
-  orthographic: 0
-  orthographic size: 15517.777
+  orthographic: 1
+  orthographic size: 414.13983
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -301,17 +301,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 209399604}
-  m_LocalRotation: {x: -0.2096186, y: 0, z: 0, w: 0.97778326}
-  m_LocalPosition: {x: 0, y: 0, z: -450}
+  m_LocalRotation: {x: -0.1564345, y: 0, z: 0, w: 0.98768836}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -24.2, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -18, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1215, y: 209}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1793.9541, y: 690.0717}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &209399608
 CanvasRenderer:
@@ -494,7 +494,7 @@ Canvas:
   m_GameObject: {fileID: 347803083}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 1
   m_Camera: {fileID: 209399606}
   m_PlaneDistance: 500
   m_PixelPerfect: 0
@@ -1282,7 +1282,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -0.00048828125, y: 100.2937}
-  m_SizeDelta: {x: -0.0010999986, y: 200.5874}
+  m_SizeDelta: {x: -0.0010999986, y: 160}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1317994022
 MonoBehaviour:
@@ -1388,8 +1388,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -138.75, y: 99.591675}
-  m_SizeDelta: {x: 1642.5, y: 199.1834}
+  m_AnchoredPosition: {x: -138.75, y: 79.99701}
+  m_SizeDelta: {x: 1642.5, y: 160}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1400460097
 MonoBehaviour:
@@ -1404,7 +1404,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.4117647}
+  m_Color: {r: 1, g: 0.7176471, b: 0, a: 0.105882354}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1491,7 +1491,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -0.0011113, y: 0}
   m_SizeDelta: {x: 1919.9989, y: 789.9592}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1401163493
@@ -1544,7 +1544,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 4da747630c4afa64989f418615fd968a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

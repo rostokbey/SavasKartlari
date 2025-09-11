@@ -92,9 +92,20 @@ public class CardUI : MonoBehaviour
     // Buraya karakterin detaylarını gösteren panelin açılma kodunu ekleyebilirsiniz.
     public void OnDetailButtonClicked()
     {
-        Debug.Log(cardData.cardName + " için detaylar gösteriliyor.");
-        // Örneğin: CharacterDetailPopup.Instance.ShowDetails(cardData);
+        if (cardData == null) return;
+
+        // CardDetailPanel’i aç
+        if (CardDetailPanel.Instance != null)
+        {
+            CardDetailPanel.Instance.ShowCardDetails(cardData);
+        }
+        else
+        {
+            Debug.LogWarning("CardDetailPanel sahnede bulunamadı!");
+        }
     }
+
+
 
     // Bu fonksiyon artık doğrudan karta tıklayınca çalışacak şekilde ayarlanacak.
     // İçeriği aynı kalıyor, çünkü görevi yerleştirme moduna geçmek.

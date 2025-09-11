@@ -63,7 +63,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 592.86774, y: 1169.1974, z: -8.897919}
-  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_LocalScale: {x: 50, y: 50, z: 50}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5220309701858552942}
@@ -102,6 +102,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16c70eeea3e1bca44bed8236f5f65a05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cardData:
+    id: 
+    cardName: 
+    baseHP: 0
+    baseDamage: 0
+    baseDex: 0
+    dex: 0
+    rarity: 
+    ability: 
+    passive: 
+    level: 0
+    xp: 0
+    skillCooldownMax: 0
+    className: 
+    race: 
+    combo: 
+    characterSprite: {fileID: 0}
+    characterPrefab3D: {fileID: 0}
+    prefab: 
+    cardId: 
+    type: 0
+    damage: 0
+    heal: 0
+    duration: 0
+    critChance: 0
+    critDamage: 0
+    reflect: 0
+    stun: 0
+    banish: 0
+    summonCount: 0
+    combine: 0
   maxHp: 0
   hp: 0
   defense: 0
@@ -117,7 +148,7 @@ Animator:
   m_GameObject: {fileID: 4560204575190123577}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5f91b177d7091ff4f902abf78f6a044d, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
