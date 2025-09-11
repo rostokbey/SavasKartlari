@@ -1,4 +1,4 @@
-using Unity.Netcode;
+ï»¿using Unity.Netcode;
 using UnityEngine;
 
 public class CardPlayUI : MonoBehaviour
@@ -7,13 +7,13 @@ public class CardPlayUI : MonoBehaviour
     {
         if (!TurnManager.Instance.IsMyTurn(NetworkManager.Singleton.LocalClientId))
         {
-            Debug.Log("Sýra sende deðil.");
+            Debug.Log("Sï¿½ra sende deï¿½il.");
             return;
         }
 
         if (FindObjectsOfType<Character>().Length >= 12)
         {
-            Debug.Log("Zaten 12 kart oynandý.");
+            Debug.Log("Zaten 12 kart oynandï¿½.");
             return;
         }
 

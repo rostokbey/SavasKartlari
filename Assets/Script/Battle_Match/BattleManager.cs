@@ -125,7 +125,7 @@ public class BattleManager : NetworkBehaviour
         if (IsServer)
             //SpawnCharacters(playerCards, enemyCards);
 
-        StartBattle();
+            StartBattle();
     }
 
     #endregion
@@ -431,7 +431,7 @@ public class BattleManager : NetworkBehaviour
         EndTurn();
     }
 
-    
+
     [ServerRpc(RequireOwnership = false)]
     public void PlayCardServerRpc(string cardId, ServerRpcParams rpcParams = default)
     {
@@ -533,15 +533,16 @@ public class BattleManager : NetworkBehaviour
 
     #endregion
 
-    
+
 
     [ServerRpc(RequireOwnership = false)]
-    public void SpawnCharacterAtPositionServerRpc(string cardId, Vector3 position, ServerRpcParams rpcParams = default)
+    public void SpawnCharacterAtPositionServerRpc(string id, Vector3 position, ServerRpcParams rpcParams = default)
+
     {
-        var card = FindObjectOfType<DeckManagerObject>().GetCardById(cardId);
+        var card = FindObjectOfType<DeckManagerObject>().GetCardById(id);
         if (card == null)
         {
-            Debug.LogError("Spawn edilecek kart bulunamadı: " + cardId);
+            Debug.LogError("Spawn edilecek kart bulunamadı: " + id);
             return;
         }
 

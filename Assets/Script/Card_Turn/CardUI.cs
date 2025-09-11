@@ -35,9 +35,10 @@ public class CardUI : MonoBehaviour
         if (detailButton != null)
         {
             detailButton.onClick.RemoveAllListeners();
-            detailButton.onClick.AddListener(OnCardClicked);
+            detailButton.onClick.AddListener(OnDetailButtonClicked); // doğru fonksiyon bağlanıyor
             detailButton.gameObject.SetActive(!isInBattle);
         }
+
 
         // Seç butonu
         if (selectButton != null)
@@ -74,8 +75,6 @@ public class CardUI : MonoBehaviour
     }
 
     // ---- Tıklamalar ----
-   
-    
 
     public void OnSelectClicked()
     {
@@ -89,13 +88,26 @@ public class CardUI : MonoBehaviour
         }
     }
 
-    // Bu fonksiyonu kartın Button component'inin OnClick event'ine bağlayın
+    // YENİ FONKSİYON: Sadece detay butonu için.
+    // Buraya karakterin detaylarını gösteren panelin açılma kodunu ekleyebilirsiniz.
+    public void OnDetailButtonClicked()
+    {
+        Debug.Log(cardData.cardName + " için detaylar gösteriliyor.");
+        // Örneğin: CharacterDetailPopup.Instance.ShowDetails(cardData);
+    }
+
+    // Bu fonksiyon artık doğrudan karta tıklayınca çalışacak şekilde ayarlanacak.
+    // İçeriği aynı kalıyor, çünkü görevi yerleştirme moduna geçmek.
     public void OnCardClicked()
     {
+        // Sadece savaş durumundaysa yerleştirme moduna geç
+        if (!isInBattle) return;
+
         // CharacterPlacer'ı çağırarak yerleştirme moduna geç
         CharacterPlacer.Instance.EnterPlacementMode(this.cardData);
 
+        Debug.Log(cardData.cardName + " kartı için yerleştirme modu aktif edildi.");
+
         // Kartı elden kaldırma gibi ek işlemler burada yapılabilir.
     }
-
 }

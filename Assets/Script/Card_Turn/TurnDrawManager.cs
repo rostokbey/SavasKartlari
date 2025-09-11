@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using Unity.Netcode;
 public class TurnDrawManager : MonoBehaviour
 {
     public GameObject cardUIPrefab; // CardUI prefab
-    public Transform handParent;   // El alaný
+    public Transform handParent;   // El alanï¿½
 
     private Queue<CardData> drawQueue = new();
     private const int MaxHandSize = 5;

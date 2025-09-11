@@ -20,7 +20,7 @@ public class DeckSelectionUIManager : MonoBehaviour
         //if (mainMenuBtn) mainMenuBtn.SetActive(true);
 
         // ModalGuard varsa aktif et
-       // ModalGuard.Open(this.gameObject);
+        // ModalGuard.Open(this.gameObject);
     }
 
     void OnDisable()

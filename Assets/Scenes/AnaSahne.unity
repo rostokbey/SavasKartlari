@@ -461,6 +461,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _currentProfileId: DEFAULT
+  myCards: []
   activeCardIndex: -1
 --- !u!4 &34511173
 Transform:
@@ -8822,8 +8823,8 @@ MonoBehaviour:
   contentParent: {fileID: 1999956193}
   cardUIPrefab: {fileID: 1757651560700811553, guid: daa3a87be95066942ba9d6487db9506e, type: 3}
   deckManager: {fileID: 1775321797}
-  bottomNav: {fileID: 1003908561}
-  mainMenuBtn: {fileID: 684181932}
+  bottomNav: {fileID: 0}
+  mainMenuBtn: {fileID: 0}
 --- !u!1 &800735394
 GameObject:
   m_ObjectHideFlags: 0
@@ -19232,6 +19233,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b16daebe3eddef54584f2d5e06391d6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  selectedMatchCards: []
+  enemyMatchCards: []
 --- !u!4 &1493074854
 Transform:
   m_ObjectHideFlags: 0
@@ -27492,6 +27495,10 @@ PrefabInstance:
       propertyPath: fullDeck.Array.size
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8343509161554720000, guid: 9643dad8aadf2a74faaada47c85f2d1e, type: 3}
+      propertyPath: masterCardCollection
+      value: 
+      objectReference: {fileID: 11400000, guid: 990e2b08e3999364892c0c830f7071cc, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

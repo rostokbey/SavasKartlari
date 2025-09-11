@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public static class CardDataMapper
 {
@@ -11,8 +11,8 @@ public static class CardDataMapper
 
             baseHP = c.baseHP,
             baseDamage = c.baseDamage,
-            baseDex = c.baseDex,   // <-- burasý
-            dex = c.dex,       // <-- burasý
+            baseDex = c.baseDex,   // <-- burasï¿½
+            dex = c.dex,       // <-- burasï¿½
 
             rarity = c.rarity,
             ability = c.ability,
@@ -37,11 +37,11 @@ public static class CardDataMapper
         if (!string.IsNullOrEmpty(d.spritePath))
             sp = Resources.Load<Sprite>("Characters/" + d.spritePath);
 
-        // yeni yapýcýyý kullanýyoruz (baseDex + dex birlikte)
+        // yeni yapï¿½cï¿½yï¿½ kullanï¿½yoruz (baseDex + dex birlikte)
         return new CardData(
             d.id, d.cardName,
             d.baseHP, d.baseDamage,
-            d.baseDex, d.dex,                 // <-- burasý
+            d.baseDex, d.dex,                 // <-- burasï¿½
             d.rarity, d.ability, d.passive,
             d.level, d.xp, d.skillCooldownMax,
             sp,

@@ -5,21 +5,45 @@ public class DeckManagerObject : MonoBehaviour
 {
     // ------------ Singleton ------------
     public static DeckManagerObject Instance;
+
     [Header("Deste Ayarları")]
-    public int deckMaxSize = 2; // İstersen 25 yap
+    public int deckMaxSize = 2;
+
+    // YENİ: Ana kart listesini tutan ScriptableObject referansı
+    [Header("Veri Kaynağı")]
+    public CardCollection masterCardCollection;
 
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // YENİ: Oyuna başlarken ana kart listesini yükle
+        LoadFullDeckFromCollection();
     }
 
-    private string NormalizeName(string s)
+    // YENİ: Kartları CardCollection asset'inden alan fonksiyon
+    private void LoadFullDeckFromCollection()
     {
-        if (string.IsNullOrEmpty(s)) return "";
-        return s.Replace("_", " ").Trim().ToLowerInvariant();
+        fullDeck.Clear();
+        if (masterCardCollection == null)
+        {
+            Debug.LogError("!!! DeckManagerObject: Master Card Collection atanmamış! Kartlar yüklenemedi.");
+            return;
+        }
+
+        foreach (var cardData in masterCardCollection.allCards)
+        {
+            if (cardData != null && !string.IsNullOrEmpty(cardData.id))
+            {
+                // Her kartın klonunu alarak ekliyoruz. Bu, ana asset'teki veriyi korur.
+                fullDeck.Add(cardData.Clone());
+            }
+        }
+        Debug.Log($"✅ Master Deck Yüklendi: {fullDeck.Count} kart bulundu.");
     }
+
 
     // ------------ Veriler ------------
     public List<CardData> fullDeck = new();
@@ -37,6 +61,12 @@ public class DeckManagerObject : MonoBehaviour
 
     // ------------ Yardımcılar ------------
     // İsim normalize + önce Inspector listesinden, yoksa Resources/Characters/... dene
+
+    private string NormalizeName(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return string.Empty;
+        return raw.Trim().ToLowerInvariant().Replace(" ", "_");
+    }
     public Sprite GetSpriteByName(string name)
     {
         if (string.IsNullOrEmpty(name)) return null;

@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: CharacterStoryDatabase
   m_EditorClassIdentifier: 
   stories:
+  - cardName: KARA_BUYUCUSU
+    story: Deneme
   - cardName: 
     story: 

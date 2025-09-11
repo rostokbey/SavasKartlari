@@ -1,13 +1,13 @@
-// CharacterPlacer.cs
+ï»¿// CharacterPlacer.cs
 using UnityEngine;
 using Unity.Netcode;
 
 public class CharacterPlacer : MonoBehaviour
 {
     public static CharacterPlacer Instance;
-    
 
-    public LayerMask battlefieldLayer; // Inspector'dan Battlefield layer'ýný seçeceðiz
+
+    public LayerMask battlefieldLayer; // Inspector'dan Battlefield layer'ï¿½nï¿½ seï¿½eceï¿½iz
 
     private Camera mainCamera;
     private CardData cardToPlace;
@@ -27,47 +27,47 @@ public class CharacterPlacer : MonoBehaviour
     {
         if (!isPlacementMode) return;
 
-        // Sol týkladýðýnda yerleþtirme iþlemini tetikle
+        // Sol tï¿½kladï¿½ï¿½ï¿½nda yerleï¿½tirme iï¿½lemini tetikle
         if (Input.GetMouseButtonDown(0))
         {
             PlaceCharacter();
         }
 
-        // Sað týk ile yerleþtirmeyi iptal et
+        // Saï¿½ tï¿½k ile yerleï¿½tirmeyi iptal et
         if (Input.GetMouseButtonDown(1))
         {
             isPlacementMode = false;
-            Debug.Log("Yerleþtirme iptal edildi.");
+            Debug.Log("Yerleï¿½tirme iptal edildi.");
         }
     }
 
-    // HandUIManager'daki kart UI'larý bu fonksiyonu çaðýracak
+    // HandUIManager'daki kart UI'larï¿½ bu fonksiyonu ï¿½aï¿½ï¿½racak
     public void EnterPlacementMode(CardData card)
     {
         if (card == null) return;
         cardToPlace = card;
         isPlacementMode = true;
-        Debug.Log(card.cardName + " için yerleþtirme modu aktif.");
+        Debug.Log(card.cardName + " iï¿½in yerleï¿½tirme modu aktif.");
     }
 
     private void PlaceCharacter()
     {
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, battlefieldLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, 500f, battlefieldLayer))
         {
             Vector3 placementPosition = hit.point;
 
-            // BattleManager'a spawn isteði gönder
-            // Bu RPC'yi bir sonraki adýmda oluþturacaðýz
-            BattleManager.Instance.SpawnCharacterAtPositionServerRpc(cardToPlace.cardId, placementPosition);
+            // BattleManager'a spawn isteï¿½i gï¿½nder
+            // Bu RPC'yi bir sonraki adï¿½mda oluï¿½turacaï¿½ï¿½z
+            BattleManager.Instance.SpawnCharacterAtPositionServerRpc(cardToPlace.id, placementPosition);
 
-            // Yerleþtirme modundan çýk
+            // Yerleï¿½tirme modundan ï¿½ï¿½k
             isPlacementMode = false;
             cardToPlace = null;
         }
         else
         {
-            Debug.Log("Geçersiz yer. Lütfen savaþ alanýna týklayýn.");
+            Debug.Log("Geï¿½ersiz yer. Lï¿½tfen savaï¿½ alanï¿½na tï¿½klayï¿½n.");
         }
     }
 }

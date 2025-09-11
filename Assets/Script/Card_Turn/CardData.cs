@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[System.Serializable]
 public class CardData
 {
     // Kimlik / İsim
@@ -60,6 +61,7 @@ public class CardData
     public CardData(string id, string name, string ability)
     {
         this.id = id;
+        this.cardId = id; // Düzeltme burada
         this.cardName = name;
         this.ability = ability;
 
@@ -85,6 +87,7 @@ public class CardData
         Sprite sp, GameObject prefab3d, string prefabPath = null)
     {
         this.id = id;
+        this.cardId = id; // Düzeltme burada
         this.cardName = name;
 
         this.baseHP = hp;
@@ -114,6 +117,7 @@ public class CardData
         Sprite sp, GameObject prefab3d, string prefabPath = null)
     {
         this.id = id;
+        this.cardId = id; // Düzeltme burada
         this.cardName = name;
 
         this.baseHP = hp;
@@ -135,7 +139,7 @@ public class CardData
         this.prefab = prefabPath;
     }
 
-    // Clone
+    // Clone - DÜZELTME: SİZİN ORİJİNAL, TAM ÇALIŞAN METODUNUZ GERİ GETİRİLDİ
     public CardData Clone()
     {
         return new CardData(
@@ -163,6 +167,7 @@ public class CardData
             banish = this.banish,
             summonCount = this.summonCount,
             combine = this.combine
+            // cardId zaten constructor'da atandığı için burada tekrar atamaya gerek yok.
         };
     }
 }
