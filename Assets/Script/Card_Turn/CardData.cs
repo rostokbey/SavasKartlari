@@ -54,6 +54,8 @@ public class CardData
     public bool banish;         // Zindana atma
     public int summonCount;     // Klon sayısı
     public bool combine;        // Kombine kartı mı
+    public bool disableAttack; // Kart hedefinin saldırmasını engeller
+
 
     // ---------------- Constructors ----------------
 

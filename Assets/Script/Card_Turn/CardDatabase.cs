@@ -56,10 +56,14 @@ public static class CardDatabase
         new CardData("S17-001", "Payla��lan Ac�", "Hasar t�m d��manlara b�l�n�r") {
             type = CardData.CardType.Special
         },
-        new CardData("S18-001", "Kahraman�n �a�r�s�", "Desteye rastgele g��l� kart ekler") {
-            type = CardData.CardType.Special
+        new CardData("S18-001", "Zaman Durdurucu", "Tüm düşmanlar 1 tur boyunca saldıramaz")
+        {
+           type = CardData.CardType.Debuff,
+           duration = 1,
+           disableAttack = true
         },
-        new CardData("S19-001", "Manevi G��", "D��en karakter ruh olarak d�ner") {
+
+        new CardData("S19-001", "Manevi Güç", "Ölen karakter ruh olarak d�ner") {
             type = CardData.CardType.Special, duration = 1
         },
         new CardData("S20-001", "Zehir", "Her tur %10 HP kaybettirir (3 tur)") {
