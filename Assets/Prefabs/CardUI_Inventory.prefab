@@ -569,7 +569,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -456.64, y: 128.23999}
+  m_AnchoredPosition: {x: -456.64, y: 139.73}
   m_SizeDelta: {x: 256.71997, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2273012952419724159
@@ -773,9 +773,8 @@ MonoBehaviour:
   xpText: {fileID: 6967837194286594353}
   dexText: {fileID: 2908299705146239133}
   characterImage: {fileID: 4986669550186250772}
-  backImage: {fileID: 0}
-  detailButton: {fileID: 3227258700368306492}
   selectButton: {fileID: 5624304834769200402}
+  detailButton: {fileID: 3227258700368306492}
   isInBattle: 0
 --- !u!1 &2962851569633404267
 GameObject:
@@ -1421,7 +1420,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 128.36, y: 239.72998}
+  m_AnchoredPosition: {x: 275, y: 587}
   m_SizeDelta: {x: 256.72, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2301258942967834837

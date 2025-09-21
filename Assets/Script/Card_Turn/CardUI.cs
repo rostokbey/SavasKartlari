@@ -29,26 +29,6 @@ public class CardUI : MonoBehaviour
     // ---- Callback ----
     public System.Action<CardData> onSelect;
 
-    void Start()
-    {
-        // Detay butonu
-        if (detailButton != null)
-        {
-            detailButton.onClick.RemoveAllListeners();
-            detailButton.onClick.AddListener(OnDetailButtonClicked); // doğru fonksiyon bağlanıyor
-            detailButton.gameObject.SetActive(!isInBattle);
-        }
-
-
-        // Seç butonu
-        if (selectButton != null)
-        {
-            selectButton.onClick.RemoveAllListeners();
-            selectButton.onClick.AddListener(OnSelectClicked);
-            selectButton.gameObject.SetActive(true); // savaşta da lazım
-        }
-    }
-
     // ---- Kart verisi set etme ----
     public void SetCardData(CardData data, bool showButtons = true)
     {
@@ -63,8 +43,20 @@ public class CardUI : MonoBehaviour
 
         if (characterImage) characterImage.sprite = data.characterSprite;
 
-        if (detailButton) detailButton.gameObject.SetActive(showButtons && !isInBattle);
-        if (selectButton) selectButton.gameObject.SetActive(showButtons);
+        // ---- Butonları ayarlama ----
+        if (detailButton)
+        {
+            detailButton.gameObject.SetActive(showButtons && !isInBattle);
+            detailButton.onClick.RemoveAllListeners();
+            detailButton.onClick.AddListener(OnDetailButtonClicked);
+        }
+
+        if (selectButton)
+        {
+            selectButton.gameObject.SetActive(showButtons);
+            selectButton.onClick.RemoveAllListeners();
+            selectButton.onClick.AddListener(OnSelectClicked);
+        }
     }
 
     // ---- Ön/arka yüz ----
@@ -80,16 +72,19 @@ public class CardUI : MonoBehaviour
     {
         if (isInBattle)
         {
-            onSelect?.Invoke(cardData); // HandUIManager'a haber ver
+            // Savaşta: HandUIManager veya benzeri bir sistem dinler
+            onSelect?.Invoke(cardData);
         }
         else
         {
+            // Envanterde: Deck seçimi popup
             DeckSelectPopup.Instance?.ShowDeckChoice(this.cardData);
         }
     }
-
-    // YENİ FONKSİYON: Sadece detay butonu için.
-    // Buraya karakterin detaylarını gösteren panelin açılma kodunu ekleyebilirsiniz.
+    public CardData GetCardData()
+    {
+        return cardData;
+    }
     public void OnDetailButtonClicked()
     {
         if (cardData == null) return;
@@ -105,20 +100,13 @@ public class CardUI : MonoBehaviour
         }
     }
 
-
-
-    // Bu fonksiyon artık doğrudan karta tıklayınca çalışacak şekilde ayarlanacak.
-    // İçeriği aynı kalıyor, çünkü görevi yerleştirme moduna geçmek.
+    // Kart tıklanınca savaşta yerleştirme modu
     public void OnCardClicked()
     {
-        // Sadece savaş durumundaysa yerleştirme moduna geç
         if (!isInBattle) return;
 
-        // CharacterPlacer'ı çağırarak yerleştirme moduna geç
         CharacterPlacer.Instance.EnterPlacementMode(this.cardData);
 
         Debug.Log(cardData.cardName + " kartı için yerleştirme modu aktif edildi.");
-
-        // Kartı elden kaldırma gibi ek işlemler burada yapılabilir.
     }
 }

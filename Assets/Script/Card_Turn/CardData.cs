@@ -172,4 +172,27 @@ public class CardData
             // cardId zaten constructor'da atandığı için burada tekrar atamaya gerek yok.
         };
     }
+    public int hp
+    {
+        get => baseHP;
+        set => baseHP = value;
+    }
+
+    public int dmg
+    {
+        get => baseDamage;
+        set => baseDamage = value;
+    }
+
+    public int str
+    {
+        get => baseDamage;
+        set => baseDamage = value;
+    }
+
+    public int dexterity
+    {
+        get => baseDex;
+        set => baseDex = value;
+    }
 }

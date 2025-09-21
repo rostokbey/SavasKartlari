@@ -1,6 +1,4 @@
-﻿// TurnManager.cs (güncellenmiş - kart çekme desteği eklendi)
-
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 using Unity.Netcode;
 
@@ -38,14 +36,17 @@ public class TurnManager : NetworkBehaviour
         SendTurnStartedClientRpc(currentTurnPlayer.Value);
     }
 
-   
-
     [ClientRpc]
     private void SendTurnStartedClientRpc(ulong currentPlayerId)
     {
         if (NetworkManager.Singleton.LocalClientId == currentPlayerId)
         {
-            FindObjectOfType<TurnDrawManager>()?.OnTurnStart();
+            // ✅ Artık TurnDrawManager yerine HandUIManager kullanıyoruz
+            var handUI = FindObjectOfType<HandUIManager>();
+            if (handUI != null)
+            {
+                handUI.DrawCard(); // yeni tur başladığında otomatik kart çek
+            }
         }
     }
 }
