@@ -95,6 +95,24 @@ public class HandUIManager : MonoBehaviour
         ui.isInBattle = true;
         ui.SetCardData(card, true);
 
+        // Kart tıklanınca spawn işlemi
+        ui.onCardClicked += (clickedCardUI) =>
+        {
+            var selectedCard = clickedCardUI.GetCardData();
+
+            // CharacterPlacer ile yerleştirme moduna geç
+            CharacterPlacer.Instance.EnterPlacementMode(selectedCard, () =>
+            {
+                // Spawn tamamlandıktan sonra kartı elden kaldır
+                handCards.Remove(clickedCardUI);
+                Destroy(clickedCardUI.gameObject);
+
+                // Desteden yeni kart çek
+                DrawCard();
+            });
+        };
+
+        // isInBattle durumunda selectButton callback (istersen ek)
         ui.onSelect = (selectedCard) =>
         {
             currentSelectedCard = selectedCard;
@@ -103,6 +121,7 @@ public class HandUIManager : MonoBehaviour
 
         handCards.Add(ui);
     }
+
 
     /// <summary>
     /// Attack butonuna basıldığında seçili kart spawn edilir, sonra elden çıkarılır

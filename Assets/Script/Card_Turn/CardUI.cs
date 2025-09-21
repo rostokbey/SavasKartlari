@@ -101,12 +101,13 @@ public class CardUI : MonoBehaviour
     }
 
     // Kart tıklanınca savaşta yerleştirme modu
+    public System.Action<CardUI> onCardClicked;
+
     public void OnCardClicked()
     {
         if (!isInBattle) return;
 
-        CharacterPlacer.Instance.EnterPlacementMode(this.cardData);
-
-        Debug.Log(cardData.cardName + " kartı için yerleştirme modu aktif edildi.");
+        onCardClicked?.Invoke(this);
     }
+
 }
